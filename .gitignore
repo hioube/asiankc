@@ -1,0 +1,14 @@
+# Fichiers générés par la synchro Google Drive Desktop
+desktop.ini
+*.tmp
+*.gdoc
+*.gsheet
+*.gslides
+
+# Sauvegardes locales de données (ne JAMAIS publier sur GitHub)
+backup_asianKC_*.json
+asiankc-data.json
+
+# Système
+Thumbs.db
+.DS_Store

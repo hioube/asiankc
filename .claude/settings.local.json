@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"=== Autres .jsonl récents dans .claude ===\"; find \"C:/Users/hioub/.claude/projects\" -name \"*.jsonl\" -printf \"%TY-%Tm-%Td %TH:%TM  %p\\\\n\" 2>/dev/null | sort -r | head -30)",
+      "Bash(echo \"=== backups ===\"; find \"C:/Users/hioub/.claude/backups\" -type f -printf \"%TY-%Tm-%Td %TH:%TM  %s  %p\\\\n\" 2>/dev/null | sort -r | head -40)",
+      "Bash(echo \"=== sessions ===\"; find \"C:/Users/hioub/.claude/sessions\" -type f -printf \"%TY-%Tm-%Td %TH:%TM  %s  %p\\\\n\" 2>/dev/null | sort -r | head -40)",
+      "Read(//c/Users/hioub/.claude/**)",
+      "Bash(python -c ' *)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "PowerShell(winget install --id GitHub.cli --accept-source-agreements --accept-package-agreements --silent 2>&1)",
+      "PowerShell($gh = \"$env:LOCALAPPDATA\\\\Microsoft\\\\WinGet\\\\Links\\\\gh.exe\"; if \\(Test-Path $gh\\) { & $gh --version } else { $p = Get-ChildItem \"$env:ProgramFiles\\\\GitHub CLI\\\\gh.exe\" -ErrorAction SilentlyContinue; if \\($p\\) { & $p.FullName --version } else { \"gh.exe introuvable - chemins testés\" } })",
+      "PowerShell($c = Get-Command gh -ErrorAction SilentlyContinue; if \\($c\\) { \"PATH: \" + $c.Source }; $found = Get-ChildItem -Path \"$env:LOCALAPPDATA\\\\Microsoft\\\\WinGet\\\\Packages\",\"$env:ProgramFiles\\\\GitHub CLI\",\"$env:LOCALAPPDATA\\\\Microsoft\\\\WinGet\\\\Links\" -Recurse -Filter gh.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName; \"Fichiers trouvés:\"; $found)",
+      "Bash(git config *)",
+      "Bash(echo \"name: $\\(git config user.name\\)\")",
+      "Bash(echo \"email: $\\(git config user.email\\)\")",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'Initial commit: AsianKC PWA \\(carnet privé avec sync Google Drive\\) *)",
+      "Bash(echo \"exit: $?\")"
+    ]
+  }
+}

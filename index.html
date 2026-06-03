@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AsianKC</title>
+<!-- PWA -->
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0f1115">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AsianKC">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  /* Écran de connexion */
+  #authGate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 50% 30%, #1a1d24, #0f1115);padding:20px;}
+  #authGate .auth-card{background:#1a1d24;border:1px solid #2a2e38;border-radius:20px;
+    padding:38px 30px;max-width:380px;width:100%;text-align:center;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.8);}
+  #authGate .auth-logo{width:72px;height:72px;border-radius:18px;margin-bottom:14px;}
+  #authGate h2{font-family:'Oswald',sans-serif;letter-spacing:1px;text-transform:uppercase;
+    color:#e7e9ee;margin:0 0 10px;font-size:26px;}
+  #authGate p{color:#9aa0ad;font-size:14px;line-height:1.5;margin:0 0 22px;}
+  #authGate .auth-note{font-size:12px;margin:18px 0 0;opacity:.8;}
+  .btn-google{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;
+    background:#fff;color:#1f1f1f;font-weight:600;font-size:15px;border:none;border-radius:10px;
+    padding:13px 18px;cursor:pointer;transition:filter .15s;}
+  .btn-google:hover{filter:brightness(.94);}
+  .btn-google::before{content:"";width:18px;height:18px;background-size:contain;background-repeat:no-repeat;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z'/%3E%3Cpath fill='%2334A853' d='M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z'/%3E%3Cpath fill='%23FBBC05' d='M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z'/%3E%3Cpath fill='%23EA4335' d='M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z'/%3E%3C/svg%3E");}
+
+  :root, body.dark-mode {
+    --bg:#0f1115; --card:#1a1d24; --card2:#222631; --accent:#e0a458;
+    --text:#e7e9ee; --muted:#9aa0ad; --line:#2a2e38; --danger:#c9504a; --success:#4caf50;
+    --warning:#ff9800; --primary-action: #00bcd4;
+  }
+  body.light-mode {
+    --bg:#f4f6f9; --card:#ffffff; --card2:#f0f2f5; --accent:#b87333;
+    --text:#1a1d24; --muted:#656d76; --line:#d2d5da; --danger:#d32f2f; --success:#388e3c;
+    --warning:#f57c00; --primary-action: #008ba3;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--text);transition: background 0.2s, color 0.2s;}
+  header{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:linear-gradient(180deg, var(--card) 0%, var(--bg) 100%);
+    z-index:5;backdrop-filter:blur(8px);gap:16px;flex-wrap:wrap;
+    box-shadow:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px rgba(0,0,0,.6);}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;}
+  .brand-logo{width:44px;height:44px;border-radius:12px;flex-shrink:0;
+    box-shadow:0 4px 14px -4px rgba(0,0,0,.5), 0 0 0 1px var(--line);}
+  header h1{font-family:'Oswald',system-ui,sans-serif;font-size:22px;margin:0;
+    letter-spacing:1px;font-weight:700;text-transform:uppercase;color:var(--text);white-space:nowrap;}
+  .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+  /* Rond compteur (jumeau du logo, tons dorés) */
+  .count-badge{width:44px;height:44px;flex-shrink:0;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(145deg, var(--card2), var(--card));
+    border:1px solid var(--accent);color:var(--accent);
+    font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;
+    box-shadow:0 4px 14px -4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);}
+
+  /* Recherche déployable */
+  .search-hidden{display:none !important;}
+
+  /* Visibilité desktop/mobile */
+  body.is-mobile .only-desktop{display:none !important;}
+  body.read-only #editView, body.read-only #deleteView, body.read-only #lbStar{display:none !important;}
+  .muted{color:var(--muted);}
+  button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:10px 16px;}
+  .btn-primary{background:var(--accent);color:var(--bg);font-weight:600;}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line);}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);}
+  .btn-success{background:transparent;color:var(--success);border:1px solid var(--success);}
+  .btn-primary-action { background: var(--primary-action); color: #fff; font-weight: 600; }
+  .icon-btn { background: transparent; color: var(--text); font-size: 20px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; }
+  
+  /* Accordéon */
+  .search-panel{background:var(--card);border-bottom:1px solid var(--line);}
+
+  /* Barre compacte */
+  .topbar{display:flex;gap:10px;align-items:center;padding:12px 22px;background:var(--card);
+    border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .topbar #search{flex:1;min-width:180px;}
+  .topbar #sortSelect{flex:0 0 auto;max-width:200px;}
+  .btn-filters{display:inline-flex;align-items:center;gap:7px;background:var(--card2);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;
+    transition:border-color .15s, background .15s;}
+  .btn-filters:hover{border-color:var(--accent);}
+  .btn-filters .fcount{display:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;
+    background:var(--accent);color:var(--bg);font-size:12px;font-weight:800;align-items:center;justify-content:center;}
+  .btn-filters .fcount.show{display:inline-flex;}
+
+  /* Titres de section dans le panneau filtres */
+  .f-h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    font-weight:700;margin:18px 0 9px;font-family:'Oswald',sans-serif;}
+
+  /* Chips (puces toggle) */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .12s ease;user-select:none;}
+  .chip:hover{border-color:var(--accent);}
+  .chip.active{background:var(--accent);color:var(--bg);border-color:var(--accent);
+    box-shadow:0 2px 8px -2px rgba(224,164,88,.5);}
+  .accordion-trigger{width:100%;padding:14px 22px;background:var(--card);color:var(--text);
+    text-align:left;font-weight:600;font-size:14px;border:none;cursor:pointer;
+    display:flex;justify-content:between;align-items:center;border-bottom:1px solid var(--line);}
+  .accordion-trigger::after{content:'▼';font-size:10px;color:var(--accent);margin-left:auto;}
+  .accordion-trigger.active::after{content:'▲';}
+  .accordion-content{max-height:0;overflow:hidden;transition:max-height 0.2s ease-out;background:var(--card);}
+  .accordion-content.open{max-height:2000px;padding:16px 22px;border-bottom:1px solid var(--line);}
+  .search-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .search-row input[type=search]{flex:1;min-width:200px;background:var(--card2);
+    border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;font:inherit;}
+  .search-row select{background:var(--card2);border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;font:inherit;}
+  
+  .filter-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  @media(max-width: 600px) { .filter-main-grid { grid-template-columns: 1fr; } }
+  .filter-left-col { display: flex; flex-direction: column; gap: 16px; }
+  .filter-tactical-block { background: var(--card2); padding: 16px; border-radius: 12px; border: 1px solid var(--line); }
+  .filter-section-title { font-size: 12px; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 700; }
+  .filter-checkbox-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filter-inline-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
+  .filter-inline-label input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+  
+  .filter-range-block { background: var(--card2); padding: 16px; border-radius: 12px; border: 1px solid var(--line); position: relative; }
+  .filter-range-block::after { content: "Ranges & Zoom"; position: absolute; top: -8px; left: 16px; background: var(--card2); padding: 0 4px; font-size: 12px; font-weight: 700; color: var(--text); }
+  .filter-range-group { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+  .filter-range-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .range-label { background: #e0e0e0; color: #333; padding: 2px 6px; border-radius: 4px; min-width: 45px; text-align: center; font-family: monospace; font-weight: 700; }
+  .filter-range-item input[type=range] { flex: 1; accent-color: #4caf50; height: 10px; border-radius: 5px; }
+
+  /* Double slider (min + max) */
+  .dual-slider { position: relative; flex: 1; height: 24px; display: flex; align-items: center; }
+  .dual-slider .dual-track { position: absolute; left: 0; right: 0; height: 6px; border-radius: 5px; background: var(--line); }
+  .dual-slider .dual-fill { position: absolute; height: 6px; border-radius: 5px; background: #4caf50; }
+  .dual-slider input[type=range] {
+    position: absolute; left: 0; right: 0; width: 100%; margin: 0;
+    background: none; pointer-events: none; -webkit-appearance: none; appearance: none; height: 24px;
+  }
+  .dual-slider input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; pointer-events: auto;
+    width: 18px; height: 18px; border-radius: 50%; background: #4caf50;
+    border: 2px solid var(--card2); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  .dual-slider input[type=range]::-moz-range-thumb {
+    pointer-events: auto; width: 18px; height: 18px; border-radius: 50%; background: #4caf50;
+    border: 2px solid var(--card2); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  .dual-slider input[type=range]::-webkit-slider-runnable-track { background: none; }
+  .dual-slider input[type=range]::-moz-range-track { background: none; }
+
+  /* Widget Stats Globaux */
+  .stats-strip { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card2); border: 1px dashed var(--line); border-radius: 10px; padding: 12px; margin-top: 14px; font-size: 13px; justify-content: space-around; }
+  .stats-item b { color: var(--accent); }
+
+  /* Grille dynamique gérée en JS via variable CSS */
+  .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(var(--grid-size, 230px), 1fr));
+    gap:16px; padding:22px 22px 40px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;cursor:pointer;position:relative;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    box-shadow:0 2px 8px -4px rgba(0,0,0,.4);}
+  .card:hover{transform:translateY(-4px);border-color:var(--accent);
+    box-shadow:0 14px 30px -14px rgba(0,0,0,.7), 0 0 0 1px var(--accent);}
+  .card .photo{width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--card2);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:40px;}
+  .card .body{padding:12px 14px;}
+  .card .name{font-weight:600;font-size:16px;margin:0 0 4px; display:flex; align-items:center; gap:6px;}
+  .card .meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;}
+  .badge{background:linear-gradient(145deg,var(--accent),#c98a3e);color:var(--bg);font-weight:700;border-radius:20px;
+    padding:3px 10px;font-size:12px;box-shadow:0 2px 6px -2px rgba(0,0,0,.5);}
+  .empty{padding:60px 22px;text-align:center;color:var(--muted);}
+  
+  /* Pastilles Statut discret */
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .status-dot.active { background: var(--success); }
+  .status-dot.mia { background: var(--warning); }
+  .status-dot.deleted { background: var(--danger); }
+  
+  /* Modals */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
+    align-items:flex-start;justify-content:center;overflow:auto;padding:24px;z-index:10;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    width:100%;max-width:580px;padding:22px;}
+  .modal h2{margin:0 0 16px;}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 4px;}
+  input[type=text],input[type=date],textarea,select{width:100%;background:var(--card2);
+    border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;}
+  textarea{resize:vertical;min-height:64px;}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;
+    color:var(--muted);cursor:pointer;}
+  .drop.hover{border-color:var(--accent);color:var(--text);}
+  .preview{width:100%;max-height:280px;object-fit:contain;border-radius:10px;margin-top:10px;display:none;}
+  
+  .ratings{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .rating label{margin:0 0 4px;}
+  .rating .row{display:flex;align-items:center;gap:8px;}
+  .rating input[type=range]{flex:1;accent-color:var(--accent);}
+  .rating .val{width:38px;text-align:center;font-weight:700;color:var(--accent);}
+  
+  .global-score-box { grid-column: span 2; background: var(--card2); border: 1px dashed var(--accent); padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+  .checkbox-group { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0; background: var(--card2); padding: 12px; border-radius: 10px; border: 1px solid var(--line); }
+  .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); cursor: pointer; }
+  .checkbox-label input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-label input[type=checkbox]:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-actions{display:flex;justify-content:space-between;margin-top:22px;gap:10px;}
+  .modal-actions .right{display:flex;gap:10px;}
+  
+  /* Zoom Photo modéré */
+  .view-photo-container { width:100%; text-align:center; cursor: zoom-in; background:var(--card2); border-radius:12px; overflow:hidden;}
+  .view-photo{width:100%; max-height:360px; object-fit:contain; transition: transform 0.2s ease;}
+  .view-photo-container:hover .view-photo{ transform: scale(1.02); }
+
+  /* Miniatures photos supplémentaires (formulaire) */
+  .extra-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .extra-thumb{position:relative;width:72px;height:90px;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .extra-thumb img{width:100%;height:100%;object-fit:cover;}
+  .extra-thumb .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;
+    border:none;background:rgba(212,48,42,.92);color:#fff;font-size:14px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;}
+  .extra-thumb .main-tag{position:absolute;top:3px;left:3px;background:var(--accent);color:var(--bg);
+    font-size:11px;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;}
+  .extra-thumb .mk-main{position:absolute;bottom:3px;left:3px;width:20px;height:20px;border-radius:50%;
+    border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;opacity:.85;}
+  .extra-thumb .mk-main:hover{background:var(--accent);color:var(--bg);}
+  .extra-thumb{cursor:grab;}
+  .extra-thumb.dragging{opacity:.4;}
+  .extra-thumb.drop-target{outline:2px dashed var(--accent);outline-offset:2px;}
+
+  /* Galerie dans la fiche (vue) */
+  .view-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .view-gallery img{width:64px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;
+    border:1px solid var(--line);transition:border-color .15s, transform .15s;}
+  .view-gallery img:hover{border-color:var(--accent);transform:translateY(-2px);}
+
+  /* Vidéos */
+  .video-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .video-row{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;font-size:13px;}
+  .video-row .vname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .video-row .rm{border:none;background:rgba(212,48,42,.9);color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;flex-shrink:0;}
+  .video-chooser{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+  .video-chooser button{text-align:left;background:var(--card2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:10px 12px;cursor:pointer;font:inherit;font-size:13px;display:flex;gap:8px;align-items:center;}
+  .video-chooser button:hover{border-color:var(--accent);}
+  .video-chooser button.active{border-color:var(--accent);background:rgba(224,164,88,.12);}
+  .card .vid-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border-radius:6px;
+    padding:2px 6px;font-size:13px;line-height:1;}
+
+  /* Lightbox plein écran */
+  .lightbox{position:fixed;inset:0;z-index:50;background:rgba(8,9,12,.92);
+    backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;}
+  .lightbox.open{display:flex;}
+  .lb-img{max-width:92vw;max-height:90vh;object-fit:contain;border-radius:8px;
+    box-shadow:0 20px 60px -10px rgba(0,0,0,.8);}
+  .lb-btn{position:absolute;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+    color:#fff;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    transition:background .15s;}
+  .lb-btn:hover{background:rgba(255,255,255,.2);}
+  .lb-close{top:18px;right:18px;width:44px;height:44px;font-size:26px;}
+  .lb-star{top:18px;left:18px;width:44px;height:44px;font-size:24px;}
+  .lb-star.is-main{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+  .lb-prev,.lb-next{top:50%;transform:translateY(-50%);width:52px;height:52px;font-size:32px;}
+  .lb-prev{left:18px;} .lb-next{right:18px;}
+  .lb-counter{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+    color:#fff;background:rgba(0,0,0,.5);padding:5px 14px;border-radius:20px;font-size:13px;letter-spacing:1px;}
+
+  .view-grades{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+  .view-grades .g{background:var(--card2);border-radius:10px;padding:8px 12px;font-size:13px; min-width: 100px;}
+  .view-grades .g b{color:var(--accent);font-size:16px;}
+  .view-block{margin-top:12px;}
+  .view-block .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .view-block .txt{white-space:pre-wrap;margin-top:4px;}
+  
+  .tech-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+  .view-tech-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; background: var(--card2); padding: 12px; border-radius: 10px; font-size: 13px; margin: 10px 0; border: 1px solid var(--line); }
+  .view-tech-info span { color: var(--muted); }
+  .view-tech-info b { color: var(--text); }
+  
+  .settings-section { background: var(--card2); padding: 14px; border-radius: 10px; margin-bottom: 14px; border: 1px solid var(--line); }
+  .settings-section h3 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: var(--accent); }
+</style>
+</head>
+<body class="dark-mode">
+
+<div id="authGate">
+  <div class="auth-card">
+    <img src="./icon-192.png" alt="AKC" class="auth-logo">
+    <h2>AsianKC</h2>
+    <p id="authStatus">Sign in to access your private notebook and sync it with your Google Drive.</p>
+    <button id="googleSignInBtn" class="btn-google">Sign in with Google</button>
+    <p class="auth-note">Your data is stored in your personal Drive. No one can access it without your sign-in.</p>
+  </div>
+</div>
+<header>
+  <div class="brand">
+    <img src="./icon-192.png" alt="KBB" class="brand-logo">
+    <div class="count-badge" id="headCount" title="Total profiles">0</div>
+    <h1>Kansass Black Book</h1>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="searchToggle" title="Search">🔍</button>
+    <button class="icon-btn" id="themeBtn" title="Toggle theme">🌓</button>
+    <button class="icon-btn" id="settingsBtn" title="Settings & Profile">⚙️</button>
+    <button class="btn-primary-action only-desktop" id="openTF">🌐 Open Thaifriendly</button>
+    <button class="btn-primary only-desktop" id="addBtn">+ Add profile</button>
+  </div>
+</header>
+
+<div class="topbar">
+  <input type="search" id="search" placeholder="Search by nickname, name or city..." class="search-hidden">
+  <select id="sortSelect" title="Sort by">
+    <option value="dateDesc">📅 Most recent</option>
+    <option value="scoreDesc">⭐ Best score</option>
+    <option value="ageAsc">🎂 Age (young→old)</option>
+    <option value="nameAsc">🔤 Name (A→Z)</option>
+    <option value="weightAsc">⚖️ Weight (low→high)</option>
+    <option value="heightAsc">📏 Height (low→high)</option>
+  </select>
+  <button id="openFilters" class="btn-filters">⚙ Filters<span id="filterCount" class="fcount"></span></button>
+</div>
+
+<div class="overlay" id="filtersOverlay">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h2 style="margin:0;">Filters</h2>
+      <button class="btn-ghost" id="clearFilters" style="padding:6px 12px;font-size:13px;">Reset</button>
+    </div>
+
+    <h3 class="f-h3">Status</h3>
+    <div class="chips" id="statusChips">
+      <button class="chip active" data-status="">All</button>
+      <button class="chip" data-status="active">🟢 Active</button>
+      <button class="chip" data-status="mia">🟡 MIA</button>
+      <button class="chip" data-status="deleted">🔴 Deleted</button>
+    </div>
+
+    <h3 class="f-h3">City</h3>
+    <select id="filterCity"><option value="">All cities</option></select>
+
+    <h3 class="f-h3">Practices</h3>
+    <div class="chips" id="tagChips">
+      <button class="chip" data-tag="bj">😮 #BJ+</button>
+      <button class="chip" data-tag="anal">🍑 #A+</button>
+      <button class="chip" data-tag="three">👥 #3</button>
+      <button class="chip" data-tag="lb">🎀 #LB</button>
+      <button class="chip" data-tag="bdsm">⛓️ #BDSM</button>
+      <button class="chip" data-tag="ft">🍈 #FT</button>
+    </div>
+
+    <h3 class="f-h3">Ranges</h3>
+    <div class="filter-range-group">
+      <div class="filter-range-item">
+        <span class="range-label" id="label-age-min">18yr</span>
+        <div class="dual-slider" data-min="18" data-max="60"><div class="dual-track"></div><div class="dual-fill" id="fill-age"></div><input type="range" id="filter-age-min" min="18" max="60" value="18"><input type="range" id="filter-age-max" min="18" max="60" value="60"></div>
+        <span class="range-label" id="label-age-max">60yr</span>
+      </div>
+      <div class="filter-range-item">
+        <span class="range-label" id="label-weight-min">30kg</span>
+        <div class="dual-slider" data-min="30" data-max="126"><div class="dual-track"></div><div class="dual-fill" id="fill-weight"></div><input type="range" id="filter-weight-min" min="30" max="126" value="30"><input type="range" id="filter-weight-max" min="30" max="126" value="126"></div>
+        <span class="range-label" id="label-weight-max">126kg</span>
+      </div>
+      <div class="filter-range-item">
+        <span class="range-label" id="label-height-min">120cm</span>
+        <div class="dual-slider" data-min="120" data-max="200"><div class="dual-track"></div><div class="dual-fill" id="fill-height"></div><input type="range" id="filter-height-min" min="120" max="200" value="120"><input type="range" id="filter-height-max" min="120" max="200" value="200"></div>
+        <span class="range-label" id="label-height-max">200cm</span>
+      </div>
+      <div class="filter-range-item">
+        <span class="range-label" id="label-bmi-min">BMI 12</span>
+        <div class="dual-slider" data-min="12" data-max="60"><div class="dual-track"></div><div class="dual-fill" id="fill-bmi"></div><input type="range" id="filter-bmi-min" min="12" max="60" value="12"><input type="range" id="filter-bmi-max" min="12" max="60" value="60"></div>
+        <span class="range-label" id="label-bmi-max">BMI 60</span>
+      </div>
+      <div class="filter-range-item" style="margin-top:5px; border-top:1px dashed var(--line); padding-top:10px;">
+        <span class="range-label" style="background:var(--accent); color:var(--bg);" id="label-gridSize">230px</span>
+        <input type="range" id="filter-gridSize" min="105" max="360" value="230">
+        <span class="range-label">Zoom</span>
+      </div>
+    </div>
+
+    <div class="stats-strip" id="statsStrip">
+      <div class="stats-item">Avg age: <b id="stat-age">-</b> yrs</div>
+      <div class="stats-item">Avg weight: <b id="stat-weight">-</b> kg</div>
+      <div class="stats-item">Avg score: <b id="stat-score">-</b>/10</div>
+      <div class="stats-item">Practices: <b id="stat-tactical">-</b></div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px;">
+      <div class="right"><button class="btn-primary" id="applyFilters">Done</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" style="display:none;">No profiles found.</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2>Settings & Profile</h2>
+    
+    <div class="settings-section">
+      <h3>My Profile</h3>
+      <label>My Name / Nickname</label>
+      <input type="text" id="p-name" placeholder="Your name">
+      <label>Default WhatsApp</label>
+      <input type="text" id="p-wa" placeholder="e.g. +33612345678 (no spaces)">
+      <label>Notes / Personal info</label>
+      <textarea id="p-notes" placeholder="Your own info, default criteria, etc."></textarea>
+    </div>
+
+    <div class="settings-section">
+      <h3>Data & Backups</h3>
+      <div style="display:flex; gap:10px; margin-top:5px;">
+        <button class="btn-success" id="exportBtn" style="flex:1;">💾 Save (JSON Backup)</button>
+        <button class="btn-ghost" id="importBtn" style="flex:1;">📂 Restore Backup</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Account & Sync</h3>
+      <p class="muted" style="font-size:13px; margin:4px 0 10px; line-height:1.5;">
+        Your profiles are synced with your personal Google Drive (file <b>asiankc-data.json</b>).
+      </p>
+      <button class="btn-ghost" id="logoutBtn" style="width:100%;">🔒 Sign out (clears data on this device)</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:15px;">
+      <button class="btn-ghost" id="closeSettings" style="width:100%;">Close and Save profile</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h2 id="editTitle">New profile</h2>
+    <input type="hidden" id="f-id">
+
+    <div style="display:flex; gap:12px; align-items:center;">
+      <div style="flex:2;">
+        <label>Nickname / name</label>
+        <input type="text" id="f-name" placeholder="Julie">
+      </div>
+      <div style="flex:1;">
+        <label>TF Profile Status</label>
+        <select id="f-status">
+          <option value="active">🟢 Active</option>
+          <option value="mia">🟡 MIA (-3 months)</option>
+          <option value="deleted">🔴 Deleted</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1;"><label>Age</label><input type="text" id="f-age" placeholder="30"></div>
+      <div style="flex:1;"><label>Gender</label>
+        <select id="f-gender">
+          <option value="Female">Female</option>
+          <option value="LB">LB</option>
+        </select>
+      </div>
+      <div style="flex:2;"><label>City / location</label><input type="text" id="f-city" placeholder="Pattaya"></div>
+    </div>
+
+    <div class="tech-grid">
+      <div><label>Height</label><input type="text" id="f-height-cm" placeholder="164"></div>
+      <div><label>Weight</label><input type="text" id="f-weight-kg" placeholder="50"></div>
+      <div style="grid-column: span 2;"><label>Education</label><input type="text" id="f-education" placeholder="College"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1;"><label>Meeting date</label><input type="date" id="f-date"></div>
+      <div style="flex:1;"><label>WhatsApp contact</label><input type="text" id="f-contact" placeholder="+66…"></div>
+    </div>
+
+    <label>Profile link</label>
+    <input type="text" id="f-link" placeholder="Link">
+
+    <label>Main photo</label>
+    <div class="drop" id="drop">Drop a photo here, or click</div>
+    <input type="file" id="f-file" accept="image/*" style="display:none;">
+    <img class="preview" id="preview">
+
+    <label style="margin-top:14px;">📁 Additional photos (private gallery)</label>
+    <div class="drop" id="dropExtra">Add one or more photos</div>
+    <input type="file" id="f-file-extra" accept="image/*" multiple style="display:none;">
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <input type="text" id="f-photo-url" placeholder="…or paste an image URL" style="flex:1;">
+      <button type="button" class="btn-ghost" id="addPhotoUrl" style="white-space:nowrap;">Add URL</button>
+    </div>
+    <div class="extra-thumbs" id="extraThumbs"></div>
+
+    <label style="margin-top:14px;">🎬 Videos (full quality)</label>
+    <div class="drop" id="dropVideo">Add a video</div>
+    <input type="file" id="f-file-video" accept="video/*" multiple style="display:none;">
+    <div id="videoList" class="video-list"></div>
+
+    <label style="margin-top:18px;">Ratings (out of 10)</label>
+    <div class="ratings" id="ratings"></div>
+
+    <label>In bed</label>
+    <div class="checkbox-group">
+      <label class="checkbox-label"><input type="checkbox" id="f-fellatio"> 😮 #BJ+</label>
+      <label class="checkbox-label"><input type="checkbox" id="f-anal"> 🍑 #A+</label>
+      <label class="checkbox-label"><input type="checkbox" id="f-three"> 👥 #3</label>
+      <label class="checkbox-label"><input type="checkbox" id="f-lb"> 🎀 #LB</label>
+      <label class="checkbox-label"><input type="checkbox" id="f-bdsm"> ⛓️ #BDSM</label>
+      <label class="checkbox-label"><input type="checkbox" id="f-ft"> 🍈 #FT</label>
+    </div>
+
+    <label>Free notes</label>
+    <textarea id="f-notes"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelEdit">Cancel</button>
+      <div class="right">
+        <button class="btn-primary" id="saveEdit">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="viewOverlay">
+  <div class="modal">
+    <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+      <h2 id="v-name" style="margin:0; display:flex; align-items:center; gap:8px;"></h2>
+      <span id="v-status-badge" style="font-size:12px; font-weight:700; padding:4px 8px; border-radius:6px;"></span>
+    </div>
+    <div class="muted" id="v-date" style="margin-top:4px;margin-bottom:8px;"></div>
+    <div id="v-info" style="margin-bottom:14px;font-size:14px;"></div>
+    
+    <div class="view-photo-container" id="v-photo-container" title="Click to enlarge">
+      <img class="view-photo" id="v-photo">
+    </div>
+    <div class="view-gallery" id="v-gallery"></div>
+    <button class="btn-ghost" id="openVideos" style="display:none; width:100%; margin-top:10px;">🎬 Videos (<span id="vidCount">0</span>)</button>
+
+    <div class="view-tech-info" id="v-tech-block">
+      <div><span>Gender:</span> <b id="v-gender"></b></div>
+      <div><span>Height:</span> <b id="v-height"></b> cm</div>
+      <div><span>Weight:</span> <b id="v-weight"></b> kg</div>
+      <div><span>BMI:</span> <b id="v-bmi" style="padding:2px 6px; border-radius:4px;"></b></div>
+      <div style="grid-column: span 2;"><span>Education:</span> <b id="v-education"></b></div>
+    </div>
+
+    <div class="view-grades" id="v-grades"></div>
+    <div class="view-block" id="v-bedBlock"><div class="lbl">In bed</div><div class="txt" id="v-bedCheckmarks" style="margin-top:6px; font-weight: 600; display: flex; flex-wrap: wrap; gap: 15px;"></div></div>
+    <div class="view-block" id="v-notesBlock"><div class="lbl">Tactical notes</div><div class="txt" id="v-notes"></div></div>
+    
+    <div class="modal-actions">
+      <button class="btn-danger" id="deleteView">Delete</button>
+      <div class="right">
+        <button class="btn-ghost" id="closeView">Close</button>
+        <button class="btn-primary" id="editView">Edit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="videoOverlay">
+  <div class="modal" style="max-width:640px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h2 style="margin:0;">🎬 Videos</h2>
+      <button class="btn-ghost" id="closeVideo" style="padding:6px 12px;">Close</button>
+    </div>
+    <video id="videoPlayer" controls playsinline style="width:100%;border-radius:10px;margin-top:12px;background:#000;display:none;"></video>
+    <div id="videoChooser" class="video-chooser"></div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-btn lb-close" id="lbClose" title="Close">×</button>
+  <button class="lb-btn lb-star" id="lbStar" title="Set as main photo">☆</button>
+  <button class="lb-btn lb-prev" id="lbPrev" title="Previous">‹</button>
+  <img class="lb-img" id="lbImg" alt="">
+  <button class="lb-btn lb-next" id="lbNext" title="Next">›</button>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+
+<script>
+const CRITERIA = [
+  {key:"physique", label:"Looks / charm"},
+  {key:"poitrine", label:"Breasts"},
+  {key:"caractere", label:"Character / vibe"},
+  {key:"hygiene",   label:"Hygiene"},
+  {key:"anglais",   label:"English level"},
+  {key:"aulit",     label:"In bed"},
+  {key:"fellatio10",label:"Blowjob"},
+];
+
+let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open("asianKCDatabase",2);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains("fiches")) d.createObjectStore("fiches",{keyPath:"id"});
+      if(!d.objectStoreNames.contains("config")) d.createObjectStore("config");
+      if(!d.objectStoreNames.contains("photoCache")) d.createObjectStore("photoCache");
+    };
+    req.onsuccess=e=>{db=e.target.result;resolve();};
+    req.onerror=e=>reject(e);
+  });
+}
+function tx(store, mode){return db.transaction(store,mode).objectStore(store);}
+function getAll(){return new Promise(r=>{const q=tx("fiches","readonly").getAll();q.onsuccess=()=>r(q.result||[]);});}
+function put(f){return new Promise(r=>{const q=tx("fiches","readwrite").put(f);q.onsuccess=()=>r();});}
+function del(id){return new Promise(r=>{const q=tx("fiches","readwrite").delete(id);q.onsuccess=()=>r();});}
+function clearFiches(){return new Promise(r=>{const q=tx("fiches","readwrite").clear();q.onsuccess=()=>r();});}
+function cacheGet(id){return new Promise(r=>{try{const q=tx("photoCache","readonly").get(id);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null);}catch(e){r(null);}});}
+function cachePut(id,blob){return new Promise(r=>{try{const q=tx("photoCache","readwrite").put(blob,id);q.onsuccess=()=>r();q.onerror=()=>r();}catch(e){r();}});}
+
+function saveConfig(key, val){return new Promise(r=>{const q=tx("config","readwrite").put(val, key);q.onsuccess=()=>r();});}
+function getConfig(key){return new Promise(r=>{const q=tx("config","readonly").get(key);q.onsuccess=()=>r(q.result);});}
+
+let fiches=[];
+let editPics=[]; // photos de la fiche en cours d'édition (refs Drive, nouvelles, ou liens externes)
+let editVids=[]; // vidéos de la fiche en cours d'édition (refs Drive ou nouvelles {blob,_new})
+let editRemoved=[]; // refs Drive à supprimer à l'enregistrement
+let viewingId=null;
+
+const grid=document.getElementById("grid");
+const empty=document.getElementById("empty");
+const countEl=document.getElementById("count");
+
+// GESTION MODE SOMBRE / LUMINEUX
+const themeBtn = document.getElementById("themeBtn");
+themeBtn.onclick = async () => {
+  const isDark = document.body.classList.contains("dark-mode");
+  document.body.className = isDark ? "light-mode" : "dark-mode";
+  await saveConfig("theme", isDark ? "light" : "dark");
+};
+
+// GESTION MODAL PARAMÈTRES
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsOverlay = document.getElementById("settingsOverlay");
+settingsBtn.onclick = async () => {
+  const prof = await getConfig("profil") || {};
+  document.getElementById("p-name").value = prof.name || "";
+  document.getElementById("p-wa").value = prof.wa || "";
+  document.getElementById("p-notes").value = prof.notes || "";
+  settingsOverlay.classList.add("open");
+};
+document.getElementById("closeSettings").onclick = async () => {
+  const prof = {
+    name: document.getElementById("p-name").value.trim(),
+    wa: document.getElementById("p-wa").value.trim(),
+    notes: document.getElementById("p-notes").value.trim(),
+  };
+  await saveConfig("profil", prof);
+  settingsOverlay.classList.remove("open");
+};
+
+// ACCORDÉON
+// État des filtres (chips)
+const filterState = { status:"", tags:{bj:false,anal:false,three:false,lb:false,bdsm:false,ft:false} };
+
+const filtersOverlay = document.getElementById("filtersOverlay");
+document.getElementById("openFilters").onclick = () => filtersOverlay.classList.add("open");
+document.getElementById("applyFilters").onclick = () => filtersOverlay.classList.remove("open");
+
+// Chips de statut (sélection unique)
+document.querySelectorAll("#statusChips .chip").forEach(chip=>{
+  chip.onclick = () => {
+    document.querySelectorAll("#statusChips .chip").forEach(c=>c.classList.remove("active"));
+    chip.classList.add("active");
+    filterState.status = chip.dataset.status;
+    render();
+  };
+});
+// Chips de pratiques (multi)
+document.querySelectorAll("#tagChips .chip").forEach(chip=>{
+  chip.onclick = () => {
+    chip.classList.toggle("active");
+    filterState.tags[chip.dataset.tag] = chip.classList.contains("active");
+    render();
+  };
+});
+
+function updateFilterCount(){
+  let n=0;
+  if(filterState.status) n++;
+  if(document.getElementById("filterCity").value) n++;
+  n += Object.values(filterState.tags).filter(Boolean).length;
+  // tranches modifiées ?
+  const ranges=[["age",18,60],["weight",30,126],["height",120,200],["bmi",12,60]];
+  for(const [k,lo,hi] of ranges){
+    if(Number(document.getElementById(`filter-${k}-min`).value)!==lo || Number(document.getElementById(`filter-${k}-max`).value)!==hi) n++;
+  }
+  const badge=document.getElementById("filterCount");
+  if(n>0){ badge.textContent=n; badge.classList.add("show"); } else { badge.classList.remove("show"); }
+}
+
+function calculateBMI(weight, height) {
+  const w = parseFloat(weight), h = parseFloat(height);
+  if (!w || !h) return null;
+  const hMeters = h / 100;
+  return (w / (hMeters * hMeters)).toFixed(1);
+}
+
+function mainPic(f){ return (f.pics && f.pics[0]) ? f.pics[0] : null; }
+
+function calculateGlobalStats(filteredList) {
+  if(!filteredList.length) {
+    document.getElementById("stat-age").textContent = "-";
+    document.getElementById("stat-weight").textContent = "-";
+    document.getElementById("stat-score").textContent = "-";
+    document.getElementById("stat-tactical").textContent = "-";
+    return;
+  }
+  let totalAge=0, ageCount=0, totalWeight=0, weightCount=0, totalScore=0, scoreCount=0;
+  let bjCount=0, analCount=0, threeCount=0, lbCount=0, bdsmCount=0, ftCount=0;
+
+  filteredList.forEach(f => {
+    if(f.age) { totalAge += parseFloat(f.age); ageCount++; }
+    if(f.weight) { totalWeight += parseFloat(f.weight); weightCount++; }
+    if(f.grades && f.grades.globale) { totalScore += f.grades.globale; scoreCount++; }
+    if(f.fellatio) bjCount++;
+    if(f.anal) analCount++;
+    if(f.three) threeCount++;
+    if(f.lb) lbCount++;
+    if(f.bdsm) bdsmCount++;
+    if(f.ft) ftCount++;
+  });
+
+  document.getElementById("stat-age").textContent = ageCount ? (totalAge/ageCount).toFixed(1) : "-";
+  document.getElementById("stat-weight").textContent = weightCount ? (totalWeight/weightCount).toFixed(1) : "-";
+  document.getElementById("stat-score").textContent = scoreCount ? (totalScore/scoreCount).toFixed(1) : "-";
+  document.getElementById("stat-tactical").textContent = `😮${bjCount} 🍑${analCount} 👥${threeCount} 🎀${lbCount} ⛓️${bdsmCount} 🍈${ftCount}`;
+}
+
+function render(){
+  const term=document.getElementById("search").value.trim().toLowerCase();
+  const filterBj=filterState.tags.bj;
+  const filterAnal=filterState.tags.anal;
+  const filterThree=filterState.tags.three;
+  const filterLb=filterState.tags.lb;
+  const filterBdsm=filterState.tags.bdsm;
+  const filterFt=filterState.tags.ft;
+  const sortOrder = document.getElementById("sortSelect").value;
+  const filterStatus = filterState.status;
+  const filterCity = document.getElementById("filterCity").value;
+  populateCityFilter();
+  updateFilterCount();
+  
+  const minAge = Number(document.getElementById("filter-age-min").value);
+  const maxAge = Number(document.getElementById("filter-age-max").value);
+  const minWeight = Number(document.getElementById("filter-weight-min").value);
+  const maxWeight = Number(document.getElementById("filter-weight-max").value);
+  const minHeight = Number(document.getElementById("filter-height-min").value);
+  const maxHeight = Number(document.getElementById("filter-height-max").value);
+  const minBMI = Number(document.getElementById("filter-bmi-min").value);
+  const maxBMI = Number(document.getElementById("filter-bmi-max").value);
+
+  const list=fiches.filter(f=>{
+    if(term && !(f.name||"").toLowerCase().includes(term) && !(f.city||"").toLowerCase().includes(term)) return false;
+    if(filterStatus && (f.status||"active") !== filterStatus) return false;
+    if(filterCity && (f.city||"") !== filterCity) return false;
+    if(filterBj && !f.fellatio) return false;
+    if(filterAnal && !f.anal) return false;
+    if(filterThree && !f.three) return false;
+    if(filterLb && !f.lb) return false;
+    if(filterBdsm && !f.bdsm) return false;
+    if(filterFt && !f.ft) return false;
+    
+    if (f.age && (parseFloat(f.age) < minAge || parseFloat(f.age) > maxAge)) return false;
+    if (f.weight && (parseFloat(f.weight) < minWeight || parseFloat(f.weight) > maxWeight)) return false;
+    if (f.height && (parseFloat(f.height) < minHeight || parseFloat(f.height) > maxHeight)) return false;
+    const bmi = calculateBMI(f.weight, f.height);
+    if (bmi && (Number(bmi) < minBMI || Number(bmi) > maxBMI)) return false;
+    
+    return true;
+  });
+
+  const numOr = (v, def) => { const n=parseFloat(v); return isNaN(n)?def:n; };
+  if(sortOrder === "scoreDesc")      list.sort((a,b)=> ((b.grades||{}).globale||0) - ((a.grades||{}).globale||0));
+  else if(sortOrder === "ageAsc")    list.sort((a,b)=> numOr(a.age,999) - numOr(b.age,999));
+  else if(sortOrder === "nameAsc")   list.sort((a,b)=> (a.name||"").localeCompare(b.name||"", undefined, {sensitivity:"base"}));
+  else if(sortOrder === "weightAsc") list.sort((a,b)=> numOr(a.weight,9999) - numOr(b.weight,9999));
+  else if(sortOrder === "heightAsc") list.sort((a,b)=> numOr(a.height,9999) - numOr(b.height,9999));
+  else                               list.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+
+  calculateGlobalStats(list);
+
+  grid.innerHTML="";
+  if(countEl) countEl.textContent = list.length + " profile" + (list.length > 1 ? "s" : "") + (list.length !== fiches.length ? " found" : "");
+  document.getElementById("headCount").textContent = fiches.length;
+  empty.style.display=list.length?"none":"block";
+  
+  for(const f of list){
+    const card=document.createElement("div");
+    card.className="card";
+    const g=f.grades&&f.grades.globale!=null?f.grades.globale:null;
+    const st = f.status || "active";
+    const mp = mainPic(f);
+
+    card.innerHTML=`
+      ${mp?`<img class="photo" alt="">`:`<div class="photo">👤</div>`}
+      ${(f.vids&&f.vids.length)?`<span class="vid-badge" title="${f.vids.length} video(s)">🎬</span>`:""}
+      <div class="body">
+        <p class="name"><span class="status-dot ${st}"></span> ${escapeHtml(f.name||"No name")}</p>
+        <div class="meta"><span>${f.date?formatDate(f.date):""}</span>
+        ${g!=null?`<span class="badge">${g}/10</span>`:""}</div>
+      </div>`;
+    if(mp){ const imgEl=card.querySelector("img.photo"); picThumbURL(mp).then(u=>{ if(u) imgEl.src=u; }); }
+    card.onclick=()=>openView(f.id);
+    grid.appendChild(card);
+  }
+}
+
+function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function formatDate(d){if(!d)return ""; const[y,m,j]=d.split("-");return `${j}/${m}/${y}`;}
+
+// Remplit la liste déroulante des villes à partir des fiches (en gardant la sélection)
+function populateCityFilter(){
+  const sel=document.getElementById("filterCity");
+  const current=sel.value;
+  const cities=[...new Set(fiches.map(f=>(f.city||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML='<option value="">All cities</option>'+cities.map(c=>`<option value="${escapeHtml(c)}">📍 ${escapeHtml(c)}</option>`).join("");
+  if(cities.includes(current)) sel.value=current;
+}
+
+document.getElementById("search").oninput=render;
+document.getElementById("sortSelect").onchange=render;
+document.getElementById("filterCity").onchange=render;
+
+const setupDualRange = (key, minLimit, maxLimit, suffix = "", prefix = "") => {
+  const minEl = document.getElementById(`filter-${key}-min`);
+  const maxEl = document.getElementById(`filter-${key}-max`);
+  const minLbl = document.getElementById(`label-${key}-min`);
+  const maxLbl = document.getElementById(`label-${key}-max`);
+  const fill = document.getElementById(`fill-${key}`);
+  const span = maxLimit - minLimit;
+
+  const update = () => {
+    let lo = Number(minEl.value), hi = Number(maxEl.value);
+    if (lo > hi) { // empêche le croisement
+      if (document.activeElement === minEl) { maxEl.value = lo; hi = lo; }
+      else { minEl.value = hi; lo = hi; }
+    }
+    minLbl.textContent = prefix + lo + suffix;
+    maxLbl.textContent = prefix + hi + suffix;
+    fill.style.left = ((lo - minLimit) / span * 100) + "%";
+    fill.style.right = ((maxLimit - hi) / span * 100) + "%";
+  };
+
+  minEl.addEventListener("input", () => { update(); render(); });
+  maxEl.addEventListener("input", () => { update(); render(); });
+  return update;
+};
+
+const updateAge    = setupDualRange("age", 18, 60, "yr");
+const updateWeight = setupDualRange("weight", 30, 126, "kg");
+const updateHeight = setupDualRange("height", 120, 200, "cm");
+const updateBMI    = setupDualRange("bmi", 12, 60, "", "BMI ");
+updateAge(); updateWeight(); updateHeight(); updateBMI();
+
+// Gestion de la réglette de taille des miniatures
+const gridSlider = document.getElementById("filter-gridSize");
+gridSlider.oninput = () => {
+  document.getElementById("label-gridSize").textContent = gridSlider.value + "px";
+  document.documentElement.style.setProperty('--grid-size', gridSlider.value + 'px');
+};
+
+document.getElementById("clearFilters").onclick=()=>{
+  document.getElementById("search").value = "";
+  filterState.status = "";
+  Object.keys(filterState.tags).forEach(k=>filterState.tags[k]=false);
+  document.querySelectorAll("#statusChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.status===""));
+  document.querySelectorAll("#tagChips .chip").forEach(c=>c.classList.remove("active"));
+  document.getElementById("filterCity").value = "";
+  document.getElementById("filter-age-min").value = 18; document.getElementById("filter-age-max").value = 60; updateAge();
+  document.getElementById("filter-weight-min").value = 30; document.getElementById("filter-weight-max").value = 126; updateWeight();
+  document.getElementById("filter-height-min").value = 120; document.getElementById("filter-height-max").value = 200; updateHeight();
+  document.getElementById("filter-bmi-min").value = 12; document.getElementById("filter-bmi-max").value = 60; updateBMI();
+  render();
+};
+
+const editOverlay=document.getElementById("editOverlay");
+const ratingsBox=document.getElementById("ratings");
+const preview=document.getElementById("preview");
+
+function updateGlobalAverage(){
+  const ranges = ratingsBox.querySelectorAll("input[type=range]");
+  let total = 0; ranges.forEach(r => total += Number(r.value));
+  document.getElementById("avg-val").textContent = ranges.length > 0 ? (total / ranges.length).toFixed(1) : "5.0";
+}
+
+function buildRatings(values){
+  ratingsBox.innerHTML="";
+  for(const c of CRITERIA){
+    const v=values&&values[c.key]!=null?values[c.key]:5;
+    const div=document.createElement("div");
+    div.className="rating";
+    div.innerHTML=`<label>${c.label}</label>
+      <div class="row"><input type="range" min="0" max="10" step="1" value="${v}" data-key="${c.key}"><span class="val">${v}</span></div>`;
+    const range=div.querySelector("input"); const val=div.querySelector(".val");
+    
+    range.oninput=()=>{ 
+      val.textContent=range.value; 
+      updateGlobalAverage(); 
+      // Règle auto Félation / BJ+
+      if(c.key === "fellatio10") {
+        const bjBox = document.getElementById("f-fellatio");
+        if(Number(range.value) >= 8) {
+          bjBox.checked = true;
+          bjBox.disabled = true;
+        } else {
+          bjBox.checked = false;
+          bjBox.disabled = true;
+        }
+      }
+    };
+    ratingsBox.appendChild(div);
+  }
+  const globalBox = document.createElement("div");
+  globalBox.className = "global-score-box";
+  let initialTotal = 0; for(const c of CRITERIA) initialTotal += (values&&values[c.key]!=null?values[c.key]:5);
+  globalBox.innerHTML = `<span>⭐ <b>Overall Score (Average)</b></span> <span id="avg-val" style="font-size:18px; font-weight:800; color:var(--accent);">${(initialTotal / CRITERIA.length).toFixed(1)}</span>`;
+  ratingsBox.appendChild(globalBox);
+}
+
+function openEdit(f, isAutofill = false){
+  if(document.body.classList.contains("read-only")) return; // mobile : lecture seule
+  document.getElementById("editTitle").textContent=f?"Edit profile":"New profile";
+  document.getElementById("f-id").value=f?f.id:"";
+  document.getElementById("f-name").value=f?(f.name||""):"";
+  document.getElementById("f-status").value=f?(f.status||"active"):"active";
+  document.getElementById("f-date").value=f?(f.date||""):new Date().toISOString().slice(0,10);
+  document.getElementById("f-age").value=f?(f.age||""):"";
+  document.getElementById("f-gender").value = (f && /lb|ladyboy|trans|ts/i.test(f.gender||"")) ? "LB" : "Female";
+  document.getElementById("f-city").value=f?(f.city||""):"";
+  document.getElementById("f-height-cm").value=f?(f.height||""):"";
+  document.getElementById("f-weight-kg").value=f?(f.weight||""):"";
+  document.getElementById("f-education").value=f?(f.education||""):"";
+  document.getElementById("f-link").value=f?(f.link||""):"";
+  document.getElementById("f-contact").value=f?(f.contact||""):"";
+  document.getElementById("f-notes").value=f?(f.notes||""):"";
+  
+  document.getElementById("f-anal").checked = f ? !!f.anal : false;
+  document.getElementById("f-three").checked = f ? !!f.three : false;
+  document.getElementById("f-lb").checked = f ? !!f.lb : false;
+  document.getElementById("f-bdsm").checked = f ? !!f.bdsm : false;
+  document.getElementById("f-ft").checked = f ? !!f.ft : false;
+  
+  buildRatings(f?f.grades:null);
+  
+  // Ajustement initial de l'état BJ+ basé sur la note de félation
+  const felRange = ratingsBox.querySelector(`input[data-key="fellatio10"]`);
+  const bjBox = document.getElementById("f-fellatio");
+  if(felRange && Number(felRange.value) >= 8) {
+    bjBox.checked = true; bjBox.disabled = true;
+  } else {
+    bjBox.checked = false; bjBox.disabled = true;
+  }
+  
+  editPics = (f && Array.isArray(f.pics)) ? f.pics.map(p=>({...p})) : [];
+  editVids = (f && Array.isArray(f.vids)) ? f.vids.map(v=>({...v})) : [];
+  editRemoved = [];
+  renderEditPics();
+  renderEditVids();
+  
+  if(!isAutofill) editOverlay.classList.add("open");
+}
+function closeEdit(){editOverlay.classList.remove("open");}
+
+async function saveEdit(){
+  const id=document.getElementById("f-id").value||("f"+Date.now());
+  const grades={}; ratingsBox.querySelectorAll("input[type=range]").forEach(r=>grades[r.dataset.key]=Number(r.value));
+  let total = 0; CRITERIA.forEach(c => total += grades[c.key]); grades.globale = Number((total / CRITERIA.length).toFixed(1));
+
+  // Upload des nouvelles photos (original fidèle + vignette) ; suppression de celles retirées
+  const saveBtn=document.getElementById("saveEdit"); const oldLabel=saveBtn.textContent;
+  const prenom=document.getElementById("f-name").value.trim()||"Sansnom";
+  try{
+    const newOnes = editPics.filter(p=>p._new);
+    if(newOnes.length){ saveBtn.disabled=true; saveBtn.textContent="Uploading photos…"; }
+    let num = editPics.filter(p=>!p._new && !p._remote).length; // continue la numérotation après les photos déjà présentes
+    for(const p of editPics){
+      if(p._new){
+        num++;
+        const info = await uploadPhotoFile(p.blob, prenom, num);
+        p.origId=info.origId; p.thumbId=info.thumbId; p.mime=info.mime;
+        delete p._new; delete p.blob; delete p._url;
+      }
+    }
+    // (suppression Drive désactivée : on ne supprime jamais de fichiers sur le Drive)
+    editRemoved=[];
+    // Upload des nouvelles vidéos (fidèle, dans le sous-dossier videos/)
+    const newVids = editVids.filter(v=>v._new);
+    if(newVids.length){ saveBtn.disabled=true; saveBtn.textContent="Uploading video…"; }
+    let vnum = editVids.filter(v=>!v._new).length;
+    for(const v of editVids){
+      if(v._new){
+        vnum++;
+        const info=await uploadVideoFile(v.blob, prenom, vnum);
+        v.fileId=info.fileId; v.mime=info.mime; v.name=info.name;
+        delete v._new; delete v.blob;
+      }
+    }
+  }catch(e){
+    saveBtn.disabled=false; saveBtn.textContent=oldLabel;
+    alert("A file couldn't be saved to Drive. Check your connection and try again.");
+    return;
+  }
+  saveBtn.disabled=false; saveBtn.textContent=oldLabel;
+
+  const pics = editPics.map(p=> p._remote ? {remoteUrl:p.remoteUrl,_remote:true} : {origId:p.origId, thumbId:p.thumbId, mime:p.mime});
+  const vids = editVids.map(v=>({fileId:v.fileId, mime:v.mime, name:v.name}));
+
+  const fiche={
+    id, name:document.getElementById("f-name").value.trim(), date:document.getElementById("f-date").value,
+    status: document.getElementById("f-status").value,
+    age:document.getElementById("f-age").value.trim(), gender:document.getElementById("f-gender").value.trim(),
+    city:document.getElementById("f-city").value.trim(), height:document.getElementById("f-height-cm").value.trim(),
+    weight:document.getElementById("f-weight-kg").value.trim(), education:document.getElementById("f-education").value.trim(),
+    link:document.getElementById("f-link").value.trim(), contact:document.getElementById("f-contact").value.trim(),
+    pics, vids, grades,
+    fellatio: document.getElementById("f-fellatio").checked, anal: document.getElementById("f-anal").checked,
+    three: document.getElementById("f-three").checked, lb: document.getElementById("f-lb").checked,
+    bdsm: document.getElementById("f-bdsm").checked, ft: document.getElementById("f-ft").checked,
+    notes:document.getElementById("f-notes").value,
+  };
+  await put(fiche); fiches=await getAll(); closeEdit(); render(); scheduleDriveSave();
+}
+
+const drop=document.getElementById("drop"); const fileInput=document.getElementById("f-file");
+drop.onclick=()=>fileInput.click(); fileInput.onchange=()=>{if(fileInput.files[0]){setMainPhoto(fileInput.files[0]);fileInput.value="";}};
+drop.ondragover=e=>{e.preventDefault();drop.classList.add("hover");}; drop.ondragleave=()=>drop.classList.remove("hover");
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove("hover"); if(e.dataTransfer.files[0])setMainPhoto(e.dataTransfer.files[0]);};
+
+// Définit/remplace la photo principale (= première de la liste)
+function setMainPhoto(file){
+  if(!file.type || !file.type.startsWith("image/")) return;
+  const pic={blob:file, mime:file.type, _new:true};
+  if(editPics.length){
+    const old=editPics[0];
+    if(!old._new && !old._remote) editRemoved.push(old); // ancienne photo Drive -> à supprimer
+    editPics[0]=pic;
+  } else {
+    editPics.push(pic);
+  }
+  renderEditPics();
+}
+
+// Photos supplémentaires (ajout)
+const dropExtra=document.getElementById("dropExtra"); const fileExtra=document.getElementById("f-file-extra");
+dropExtra.onclick=()=>fileExtra.click();
+fileExtra.onchange=()=>{ Array.from(fileExtra.files).forEach(f=>{ if(f.type&&f.type.startsWith("image/")) editPics.push({blob:f, mime:f.type, _new:true}); }); fileExtra.value=""; renderEditPics(); };
+dropExtra.ondragover=e=>{e.preventDefault();dropExtra.classList.add("hover");};
+dropExtra.ondragleave=()=>dropExtra.classList.remove("hover");
+dropExtra.ondrop=e=>{e.preventDefault();dropExtra.classList.remove("hover"); Array.from(e.dataTransfer.files).forEach(f=>{if(f.type&&f.type.startsWith("image/"))editPics.push({blob:f, mime:f.type, _new:true});}); renderEditPics();};
+
+function removePicAt(i){
+  const p=editPics[i];
+  if(p && !p._new && !p._remote) editRemoved.push(p);
+  editPics.splice(i,1);
+  renderEditPics();
+}
+
+// Ajout d'une photo via URL : on tente de la télécharger (-> fichier Drive, daté du jour) ; sinon on garde le lien
+const addPhotoUrlBtn=document.getElementById("addPhotoUrl");
+addPhotoUrlBtn.onclick = async () => {
+  const inp=document.getElementById("f-photo-url"); const url=inp.value.trim();
+  if(!url) return;
+  const lbl=addPhotoUrlBtn.textContent; addPhotoUrlBtn.disabled=true; addPhotoUrlBtn.textContent="…";
+  try{
+    const r=await fetch(url);
+    if(r.ok){ const blob=await r.blob(); if((blob.type||"").startsWith("image/")){ editPics.push({blob, mime:blob.type, _new:true}); inp.value=""; renderEditPics(); return; } }
+    throw new Error("not image");
+  }catch(e){
+    // Téléchargement bloqué (CORS) -> on garde le lien externe (affiché tel quel)
+    editPics.push({remoteUrl:url, _remote:true}); inp.value=""; renderEditPics();
+  }finally{ addPhotoUrlBtn.disabled=false; addPhotoUrlBtn.textContent=lbl; }
+};
+
+// --- Vidéos dans le formulaire ---
+const dropVideo=document.getElementById("dropVideo"); const fileVideo=document.getElementById("f-file-video");
+dropVideo.onclick=()=>fileVideo.click();
+fileVideo.onchange=()=>{ Array.from(fileVideo.files).forEach(f=>{ if(f.type&&f.type.startsWith("video/")) editVids.push({blob:f, mime:f.type, _new:true, name:f.name}); }); fileVideo.value=""; renderEditVids(); };
+dropVideo.ondragover=e=>{e.preventDefault();dropVideo.classList.add("hover");};
+dropVideo.ondragleave=()=>dropVideo.classList.remove("hover");
+dropVideo.ondrop=e=>{e.preventDefault();dropVideo.classList.remove("hover"); Array.from(e.dataTransfer.files).forEach(f=>{if(f.type&&f.type.startsWith("video/"))editVids.push({blob:f, mime:f.type, _new:true, name:f.name});}); renderEditVids();};
+function removeVidAt(i){ editVids.splice(i,1); renderEditVids(); } // le fichier reste dans le Drive (jamais supprimé)
+function renderEditVids(){
+  const box=document.getElementById("videoList"); box.innerHTML="";
+  editVids.forEach((v,i)=>{
+    const row=document.createElement("div"); row.className="video-row";
+    const nm=document.createElement("span"); nm.className="vname"; nm.textContent="🎬 "+(v.name||("video "+(i+1)))+(v._new?" (new)":"");
+    const rm=document.createElement("button"); rm.type="button"; rm.className="rm"; rm.textContent="×"; rm.title="Remove from profile";
+    rm.onclick=()=>removeVidAt(i);
+    row.appendChild(nm); row.appendChild(rm); box.appendChild(row);
+  });
+}
+
+async function renderEditPics(){
+  // Aperçu de la photo principale
+  const main=editPics[0];
+  if(main){ const u=await picThumbURL(main); preview.src=u||""; preview.style.display=u?"block":"none"; }
+  else { preview.style.display="none"; preview.src=""; }
+
+  // Miniatures : glisser pour réordonner, ★ pour définir comme principale, × pour retirer
+  const box=document.getElementById("extraThumbs"); box.innerHTML="";
+  for(let i=0;i<editPics.length;i++){
+    const d=document.createElement("div"); d.className="extra-thumb"; d.draggable=true; d.dataset.i=i;
+    const img=document.createElement("img");
+    picThumbURL(editPics[i]).then(u=>{ if(u) img.src=u; });
+    if(i===0){ const tag=document.createElement("span"); tag.className="main-tag" ; tag.textContent="★"; tag.title="Main photo"; d.appendChild(tag); }
+    else { const mk=document.createElement("button"); mk.type="button"; mk.className="mk-main"; mk.textContent="★"; mk.title="Set as main"; mk.onclick=(e)=>{e.stopPropagation(); setAsMain(i);}; d.appendChild(mk); }
+    const rm=document.createElement("button"); rm.type="button"; rm.className="rm"; rm.textContent="×"; rm.title="Remove";
+    rm.onclick=(e)=>{e.stopPropagation(); removePicAt(i);};
+    d.appendChild(img); d.appendChild(rm);
+    // Drag & drop pour réordonner
+    d.addEventListener("dragstart", e=>{ e.dataTransfer.setData("text/plain", i); d.classList.add("dragging"); });
+    d.addEventListener("dragend", ()=> d.classList.remove("dragging"));
+    d.addEventListener("dragover", e=>{ e.preventDefault(); d.classList.add("drop-target"); });
+    d.addEventListener("dragleave", ()=> d.classList.remove("drop-target"));
+    d.addEventListener("drop", e=>{ e.preventDefault(); d.classList.remove("drop-target"); const from=Number(e.dataTransfer.getData("text/plain")); reorderPics(from, i); });
+    box.appendChild(d);
+  }
+}
+function setAsMain(i){ if(i<=0||i>=editPics.length) return; const [p]=editPics.splice(i,1); editPics.unshift(p); renderEditPics(); }
+function reorderPics(from, to){ if(from===to||from<0||to<0) return; const [p]=editPics.splice(from,1); editPics.splice(to,0,p); renderEditPics(); }
+
+document.getElementById("openTF").onclick = () => { window.open("https://www.thaifriendly.com", "tfTab"); };
+
+// Applique des données importées (depuis le bookmarklet OU l'import manuel) dans le formulaire
+async function applyImportedData(d){
+  const onlyNum = (s) => { const m = (s||"").toString().match(/\d+(\.\d+)?/); return m ? m[0] : ""; };
+  openEdit(null, true);
+  if(d.name) document.getElementById("f-name").value = d.name;
+  if(d.age) document.getElementById("f-age").value = onlyNum(d.age) || d.age;
+  if(d.gender) document.getElementById("f-gender").value = /lb|ladyboy|trans|ts/i.test(d.gender) ? "LB" : "Female";
+  if(d.city) document.getElementById("f-city").value = d.city;
+  if(d.height) document.getElementById("f-height-cm").value = onlyNum(d.height) || d.height;
+  if(d.weight) document.getElementById("f-weight-kg").value = onlyNum(d.weight) || d.weight;
+  if(d.education) document.getElementById("f-education").value = d.education;
+  if(d.link) document.getElementById("f-link").value = d.link;
+
+  const gen = (d.gender || "").toLowerCase();
+  if(gen.includes("transgender") || gen === "ts" || gen.includes("ladyboy")) {
+    document.getElementById("f-lb").checked = true;
+    document.getElementById("f-ft").checked = true; // Règle auto Fake Tits pour les LB
+  }
+
+  if (d.photoUrl) {
+    // Tente de récupérer l'image pour la stocker en fichier ; sinon, garde le lien externe
+    let added=false;
+    try { const response = await fetch(d.photoUrl); if (response.ok) { const blob=await response.blob(); if(blob.type.startsWith("image/")){ editPics.unshift({blob, mime:blob.type, _new:true}); added=true; } } } catch (e) {}
+    if(!added) editPics.unshift({remoteUrl:d.photoUrl, _remote:true});
+    renderEditPics();
+  }
+  editOverlay.classList.add("open");
+}
+
+// Bookmarklet PC : reçoit les données depuis l'onglet Thaifriendly
+window.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "THAIFRIENDLY_DATA") {
+    applyImportedData(event.data);
+  }
+});
+
+const viewOverlay=document.getElementById("viewOverlay");
+const photoContainer = document.getElementById("v-photo-container");
+
+// Galerie courante de la fiche affichée
+let currentGallery = []; // tableau de "pics"
+photoContainer.onclick = () => { if(currentGallery.length) openLightbox(currentGallery, 0); };
+
+// ---- Lightbox plein écran (charge l'original à la demande) ----
+let lbList=[], lbIdx=0;
+const lightbox=document.getElementById("lightbox");
+const lbImg=document.getElementById("lbImg");
+const lbCounter=document.getElementById("lbCounter");
+async function showLb(){
+  const multi = lbList.length>1;
+  document.getElementById("lbPrev").style.display = multi ? "flex" : "none";
+  document.getElementById("lbNext").style.display = multi ? "flex" : "none";
+  lbCounter.style.display = "block";
+  lbCounter.textContent = multi ? ((lbIdx+1)+" / "+lbList.length) : "Loading…";
+  const idxAtRequest = lbIdx;
+  lbImg.style.opacity="0.4";
+  const u = await picOrigURL(lbList[lbIdx]);
+  if(idxAtRequest!==lbIdx) return; // l'utilisateur a déjà changé d'image
+  if(u){ lbImg.src=u; }
+  lbImg.style.opacity="1";
+  lbCounter.textContent = multi ? ((lbIdx+1)+" / "+lbList.length) : "";
+  lbCounter.style.display = multi ? "block" : "none";
+  updateLbStar();
+}
+function updateLbStar(){
+  const star=document.getElementById("lbStar");
+  const f=fiches.find(x=>x.id===viewingId);
+  if(!f || !Array.isArray(f.pics) || f.pics.length<2){ star.style.display="none"; return; }
+  star.style.display="flex";
+  const isMain = f.pics.indexOf(lbList[lbIdx])===0;
+  star.classList.toggle("is-main", isMain);
+  star.textContent = isMain ? "★" : "☆";
+  star.title = isMain ? "Already the main photo" : "Set as main photo";
+}
+document.getElementById("lbStar").onclick = async (e)=>{
+  e.stopPropagation();
+  if(document.body.classList.contains("read-only")) return;
+  const f=fiches.find(x=>x.id===viewingId);
+  if(!f || !Array.isArray(f.pics)) return;
+  const pic=lbList[lbIdx];
+  const idx=f.pics.indexOf(pic);
+  if(idx>0){
+    const [p]=f.pics.splice(idx,1); f.pics.unshift(p);
+    await put(f); fiches=await getAll(); scheduleDriveSave();
+    openView(viewingId); render();
+    // réaligne le lightbox sur la nouvelle photo principale
+    lbList = currentGallery; lbIdx = 0;
+    showLb();
+  }
+};
+function openLightbox(list, idx){ lbList=list; lbIdx=idx||0; lightbox.classList.add("open"); showLb(); }
+
+// ---- Pop-up lecteur vidéo ----
+const videoOverlay=document.getElementById("videoOverlay");
+const videoPlayer=document.getElementById("videoPlayer");
+document.getElementById("openVideos").onclick = async () => {
+  const f=fiches.find(x=>x.id===viewingId);
+  if(!f || !Array.isArray(f.vids) || !f.vids.length) return;
+  const chooser=document.getElementById("videoChooser"); chooser.innerHTML="";
+  videoPlayer.style.display="none"; videoPlayer.removeAttribute("src");
+  f.vids.forEach((v,i)=>{
+    const btn=document.createElement("button");
+    btn.textContent="🎬 "+(v.name||("Video "+(i+1)));
+    btn.onclick=async()=>{
+      chooser.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      btn.textContent="⏳ Loading…";
+      const url=await driveGetBlobURL(v.fileId);
+      btn.textContent="🎬 "+(v.name||("Video "+(i+1)));
+      if(url){ videoPlayer.src=url; videoPlayer.style.display="block"; videoPlayer.play().catch(()=>{}); }
+    };
+    chooser.appendChild(btn);
+  });
+  // lance directement la première
+  if(f.vids.length===1) chooser.querySelector("button").click();
+  videoOverlay.classList.add("open");
+};
+document.getElementById("closeVideo").onclick = ()=>{ videoPlayer.pause(); videoOverlay.classList.remove("open"); };
+function closeLightbox(){ lightbox.classList.remove("open"); }
+document.getElementById("lbClose").onclick = (e)=>{ e.stopPropagation(); closeLightbox(); };
+document.getElementById("lbPrev").onclick = (e)=>{ e.stopPropagation(); lbIdx=(lbIdx-1+lbList.length)%lbList.length; showLb(); };
+document.getElementById("lbNext").onclick = (e)=>{ e.stopPropagation(); lbIdx=(lbIdx+1)%lbList.length; showLb(); };
+lightbox.onclick = (e)=>{ if(e.target===lightbox) closeLightbox(); };
+document.addEventListener("keydown", (e)=>{
+  if(!lightbox.classList.contains("open")) return;
+  if(e.key==="Escape") closeLightbox();
+  else if(e.key==="ArrowLeft" && lbList.length>1) document.getElementById("lbPrev").click();
+  else if(e.key==="ArrowRight" && lbList.length>1) document.getElementById("lbNext").click();
+});
+
+function openView(id){
+  const f=fiches.find(x=>x.id===id);if(!f)return; viewingId=id;
+  
+  
+  document.getElementById("v-name").textContent=f.name||"No name";
+  document.getElementById("v-date").textContent=f.date?"Met on "+formatDate(f.date):"";
+  
+  // Badge de statut en haut à droite
+  const badge = document.getElementById("v-status-badge");
+  const st = f.status || "active";
+  if(st === "active") { badge.textContent = "🟢 ACTIVE"; badge.style.background = "rgba(76,175,80,0.2)"; badge.style.color = "var(--success)"; }
+  else if(st === "mia") { badge.textContent = "🟡 MIA (-3 months)"; badge.style.background = "rgba(255,152,0,0.2)"; badge.style.color = "var(--warning)"; }
+  else { badge.textContent = "🔴 DELETED"; badge.style.background = "rgba(201,80,74,0.2)"; badge.style.color = "var(--danger)"; }
+
+  // Infos contact & Bouton direct WhatsApp (géré intelligemment avec le profil)
+  const parts=[];
+  if(f.age) parts.push("🎂 "+escapeHtml(f.age)+" yrs"); if(f.city) parts.push("📍 "+escapeHtml(f.city));
+  
+  if(f.contact) {
+    parts.push(`📞 <span style="font-weight:600; color:var(--accent); cursor:pointer;" id="v-wa-click" title="Send a WhatsApp message">${escapeHtml(f.contact)} 💬</span>`);
+  }
+  
+  // Bouton Profil TF discret qui prévient si le statut est MIA ou Deleted
+  let tfLabel = "profile";
+  if(st === "mia") tfLabel = "profile (⚠️ MIA)";
+  if(st === "deleted") tfLabel = "profile (❌ Deleted)";
+  if(f.link) parts.push(`🔗 <a href="${escapeHtml(f.link)}" target="_blank" style="color:${st==='active'?'var(--accent)':'var(--danger)'}; font-weight:bold;">${tfLabel}</a>`);
+  
+  document.getElementById("v-info").innerHTML=parts.join(" &nbsp;·&nbsp; ");
+  
+  // Action clic sur le numéro WhatsApp
+  if(f.contact) {
+    document.getElementById("v-wa-click").onclick = async () => {
+      const prof = await getConfig("profil") || {};
+      const monNom = prof.name ? ` It's ${prof.name}.` : "";
+      const text = encodeURIComponent(`Hi!${monNom} Hope you are doing well.`);
+      const num = f.contact.replace(/[^0-9+]/g, '');
+      window.open(`https://wa.me/${num}?text=${text}`, '_blank');
+    };
+  }
+
+  // Construit la galerie à partir des "pics" (vignettes pour l'affichage)
+  currentGallery = Array.isArray(f.pics) ? f.pics.slice() : [];
+  const vp=document.getElementById("v-photo");
+  if(currentGallery.length){ vp.style.display="block"; picThumbURL(currentGallery[0]).then(u=>{ if(u) vp.src=u; }); }
+  else { vp.style.display="none"; vp.removeAttribute("src"); }
+
+  // Miniatures de galerie (si plus d'une photo)
+  const gal=document.getElementById("v-gallery"); gal.innerHTML="";
+  if(currentGallery.length>1){
+    currentGallery.forEach((pic,i)=>{
+      const im=document.createElement("img");
+      picThumbURL(pic).then(u=>{ if(u) im.src=u; });
+      im.onclick=(e)=>{ e.stopPropagation(); openLightbox(currentGallery, i); };
+      gal.appendChild(im);
+    });
+  }
+  // Bouton Videos
+  const vidBtn=document.getElementById("openVideos");
+  const vids = Array.isArray(f.vids) ? f.vids : [];
+  if(vids.length){ vidBtn.style.display="block"; document.getElementById("vidCount").textContent=vids.length; }
+  else { vidBtn.style.display="none"; }
+
+  document.getElementById("v-gender").textContent = f.gender || "-";
+  document.getElementById("v-height").textContent = f.height || "-";
+  document.getElementById("v-weight").textContent = f.weight || "-";
+  document.getElementById("v-education").textContent = f.education || "-";
+
+  // Style Visuel Intelligent IMC (BMI)
+  const bmi = calculateBMI(f.weight, f.height);
+  const bmiEl = document.getElementById("v-bmi");
+  if(bmi) {
+    bmiEl.textContent = bmi;
+    const bNum = Number(bmi);
+    if(bNum >= 18.5 && bNum <= 23) { bmiEl.style.backgroundColor = "var(--success)"; bmiEl.style.color = "#fff"; }
+    else if(bNum < 18.5) { bmiEl.style.backgroundColor = "var(--primary-action)"; bmiEl.style.color = "#fff"; }
+    else { bmiEl.style.backgroundColor = "var(--danger)"; bmiEl.style.color = "#fff"; }
+  } else {
+    bmiEl.textContent = "-"; bmiEl.style.backgroundColor = "transparent";
+  }
+
+  const gbox=document.getElementById("v-grades");gbox.innerHTML="";
+  for(const c of CRITERIA){
+    const v=f.grades?f.grades[c.key]:null; if(v==null)continue;
+    const el=document.createElement("div");el.className="g"; el.innerHTML=`${c.label}<br><b>${v}</b>/10`;gbox.appendChild(el);
+  }
+  if(f.grades && f.grades.globale != null){
+    const el=document.createElement("div");el.className="g"; el.style.border = "1px solid var(--accent)";
+    el.innerHTML=`⭐ Overall Score<br><b style="font-size:18px;">${f.grades.globale}</b>/10`;gbox.appendChild(el);
+  }
+  
+  // Cases à cocher Au lit
+  const bedCheckmarks = document.getElementById("v-bedCheckmarks"); bedCheckmarks.innerHTML = "";
+  bedCheckmarks.innerHTML += f.fellatio ? `<span style="color:#e0a458;">YES #BJ+</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #BJ+</span>`;
+  bedCheckmarks.innerHTML += f.anal ? `<span style="color:#e0a458;">YES #A+</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #A+</span>`;
+  bedCheckmarks.innerHTML += f.three ? `<span style="color:#e0a458;">YES #3</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #3</span>`;
+  bedCheckmarks.innerHTML += f.lb ? `<span style="color:#e0a458;">YES #LB</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #LB</span>`;
+  bedCheckmarks.innerHTML += f.bdsm ? `<span style="color:#e0a458;">YES #BDSM</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #BDSM</span>`;
+  bedCheckmarks.innerHTML += f.ft ? `<span style="color:#e0a458;">YES #FT</span>` : `<span style="color:var(--muted); text-decoration:line-through;">NO #FT</span>`;
+  
+  document.getElementById("v-notesBlock").style.display=f.notes&&f.notes.trim()?"block":"none";
+  document.getElementById("v-notes").textContent=f.notes||""; viewOverlay.classList.add("open");
+}
+function closeView(){viewOverlay.classList.remove("open");viewingId=null;}
+
+// BACKUP & RESTORE (sauvegarde locale complète avec photos en base64)
+document.getElementById("exportBtn").onclick = async () => {
+  const btn=document.getElementById("exportBtn"); const lbl=btn.textContent;
+  btn.disabled=true; btn.textContent="Préparation…";
+  try{
+    const dataToExport = [];
+    for (const f of fiches) {
+      const picsData=[];
+      for(const pic of (f.pics||[])){
+        try{
+          if(pic._remote){ picsData.push({remoteUrl:pic.remoteUrl}); continue; }
+          const u=await picOrigURL(pic); if(!u) continue;
+          const blob=await (await fetch(u)).blob();
+          const dataURL=await blobToDataURL(blob);
+          picsData.push({dataURL, mime:pic.mime||blob.type});
+        }catch(e){}
+      }
+      const o={...f}; delete o.pics;
+      dataToExport.push({ ...o, picsData });
+    }
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob); const a = document.createElement("a");
+    a.href = url; a.download = `backup_asianKC_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+  } finally { btn.disabled=false; btn.textContent=lbl; }
+};
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try {
+      const imported = JSON.parse(evt.target.result); if (!Array.isArray(imported)) throw new Error("Format invalide");
+      if (confirm(`Import ${imported.length} profiles? Photos will be re-saved to your Drive.`)) {
+        for (const f of imported) {
+          const pics=[];
+          // Nouveau format (picsData) ou ancien format (photo/photos base64)
+          const legacy=[];
+          if(Array.isArray(f.picsData)){ f.picsData.forEach(p=>legacy.push(p)); }
+          else { if(f.photo) legacy.push({dataURL:f.photo}); if(Array.isArray(f.photos)) f.photos.forEach(p=>legacy.push({dataURL:p})); }
+          let num=0;
+          for(const item of legacy){
+            try{
+              if(item.remoteUrl){ pics.push({remoteUrl:item.remoteUrl,_remote:true}); continue; }
+              const d=item.dataURL; if(!d||!d.startsWith("data:")) continue;
+              const blob=await dataURLToBlob(d);
+              num++;
+              const info=await uploadPhotoFile(blob, f.name||"Sansnom", num);
+              pics.push({origId:info.origId, thumbId:info.thumbId, mime:info.mime});
+            }catch(e){}
+          }
+          const o={...f}; delete o.picsData; delete o.photo; delete o.photos; delete o.backupPhotoUrl;
+          o.pics=pics;
+          await put(o);
+        }
+        fiches = await getAll(); render(); scheduleDriveSave(); alert("Restore successful!");
+      }
+    } catch (err) { alert("Corrupted file."); }
+  };
+  reader.readAsText(file);
+};
+
+document.getElementById("addBtn").onclick=()=>openEdit(null);
+
+// Loupe : déplie/replie la barre de recherche
+const searchEl=document.getElementById("search");
+document.getElementById("searchToggle").onclick=()=>{
+  const hidden=searchEl.classList.toggle("search-hidden");
+  if(!hidden){ searchEl.focus(); } else { searchEl.value=""; render(); }
+};
+searchEl.addEventListener("blur", ()=>{ if(!searchEl.value.trim()) searchEl.classList.add("search-hidden"); });
+
+// Détection mobile -> mode lecture seule (masque TF, ajout, édition, suppression)
+function isMobileDevice(){
+  return window.matchMedia("(max-width: 820px)").matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+const READ_ONLY = isMobileDevice();
+if(READ_ONLY){
+  document.body.classList.add("is-mobile","read-only");
+}
+document.getElementById("cancelEdit").onclick=closeEdit;
+document.getElementById("saveEdit").onclick=saveEdit;
+document.getElementById("closeView").onclick=closeView;
+document.getElementById("editView").onclick=()=>{const f=fiches.find(x=>x.id===viewingId);closeView();openEdit(f);};
+document.getElementById("deleteView").onclick=async()=>{
+  if(viewingId && confirm("Delete this profile?")){ await del(viewingId); fiches=await getAll(); closeView(); render(); scheduleDriveSave(); }
+};
+[editOverlay,viewOverlay,settingsOverlay,filtersOverlay].forEach(o=>o.onclick=e=>{if(e.target===o){ if(o===settingsOverlay)document.getElementById("closeSettings").click(); else o.classList.remove("open");}});
+videoOverlay.onclick=e=>{ if(e.target===videoOverlay){ videoPlayer.pause(); videoOverlay.classList.remove("open"); } };
+
+// ============ GOOGLE DRIVE SYNC ============
+const DRIVE_CLIENT_ID = "1056493878222-o584rul0j9je953pjjl6nba20ofijpmc.apps.googleusercontent.com";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_FILENAME = "asiankc-data.json";
+let driveToken=null, driveFileId=null, driveFolderId=null, tokenClient=null, driveSaveTimer=null;
+const urlCache=new Map(); // id Drive -> objectURL (en mémoire, durée de session)
+
+function blobToDataURL(blob){ return new Promise(r=>{const fr=new FileReader();fr.onloadend=()=>r(fr.result);fr.readAsDataURL(blob);}); }
+async function dataURLToBlob(d){ const res=await fetch(d); return await res.blob(); }
+
+// Génère une vignette JPEG allégée (pour l'affichage), sans toucher à l'original
+function makeThumb(blob, maxW=600, quality=0.82){
+  return new Promise((resolve,reject)=>{
+    const u=URL.createObjectURL(blob); const img=new Image();
+    img.onload=()=>{
+      const scale=Math.min(1, maxW/img.width);
+      const w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(u);
+      c.toBlob(b=> b?resolve(b):reject(new Error("thumb")), "image/jpeg", quality);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(u); reject(new Error("img")); };
+    img.src=u;
+  });
+}
+
+// --- Dossier AsianKC sur le Drive ---
+async function driveEnsureFolder(){
+  if(driveFolderId) return driveFolderId;
+  const q=encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='AsianKC' and trashed=false");
+  const r=await driveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`);
+  const j=await r.json();
+  if(j.files && j.files[0]){ driveFolderId=j.files[0].id; return driveFolderId; }
+  const cr=await driveApi("https://www.googleapis.com/drive/v3/files?fields=id",
+    {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name:"AsianKC", mimeType:"application/vnd.google-apps.folder"})});
+  const cj=await cr.json(); driveFolderId=cj.id; return driveFolderId;
+}
+
+// --- Upload fidèle d'un blob (octet pour octet, aucune recompression) ---
+async function driveUploadBlob(blob, name){
+  await driveEnsureFolder();
+  return driveUploadBlobTo(blob, name, driveFolderId);
+}
+// Upload dans un dossier précis (octet pour octet, aucune recompression)
+async function driveUploadBlobTo(blob, name, parentId){
+  const boundary="akcf"+Date.now()+Math.random().toString(16).slice(2);
+  const meta={name, parents:[parentId]};
+  const head=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: ${blob.type||"application/octet-stream"}\r\n\r\n`;
+  const foot=`\r\n--${boundary}--`;
+  const body=new Blob([head, blob, foot]);
+  const r=await driveApi("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+    {method:"POST", headers:{"Content-Type":"multipart/related; boundary="+boundary}, body});
+  const j=await r.json(); return j.id;
+}
+async function driveDeleteFile(id){ /* Désactivé : l'app ne supprime jamais de fichiers sur ton Drive. Le ménage se fait manuellement. */ return; }
+
+// --- Sous-dossiers (un par fille, + 'vignettes' dedans) ---
+const subfolderCache={};
+async function driveEnsureSubfolder(parentId, name){
+  const ck=parentId+"/"+name;
+  if(subfolderCache[ck]) return subfolderCache[ck];
+  const q=encodeURIComponent(`mimeType='application/vnd.google-apps.folder' and name='${name.replace(/'/g,"\\'")}' and '${parentId}' in parents and trashed=false`);
+  const r=await driveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`);
+  const j=await r.json();
+  let id;
+  if(j.files && j.files[0]) id=j.files[0].id;
+  else {
+    const cr=await driveApi("https://www.googleapis.com/drive/v3/files?fields=id",
+      {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, mimeType:"application/vnd.google-apps.folder", parents:[parentId]})});
+    id=(await cr.json()).id;
+  }
+  subfolderCache[ck]=id; return id;
+}
+
+// --- Date de la photo (EXIF prise de vue, sinon date du fichier, sinon aujourd'hui) ---
+async function readExifDate(blob){
+  try{
+    if(!/jpe?g/i.test(blob.type||"")) return null;
+    const buf=await blob.slice(0, 256*1024).arrayBuffer();
+    const view=new DataView(buf);
+    if(view.getUint16(0)!==0xFFD8) return null;
+    let offset=2; const len=view.byteLength;
+    while(offset+4<len){
+      const marker=view.getUint16(offset);
+      const size=view.getUint16(offset+2);
+      if(marker===0xFFE1){
+        const start=offset+4;
+        if(view.getUint32(start)===0x45786966){
+          const tiff=start+6;
+          const little=view.getUint16(tiff)===0x4949;
+          const g16=o=>view.getUint16(o,little), g32=o=>view.getUint32(o,little);
+          if(view.getUint16(tiff+2,little)!==0x002A) return null;
+          const ifd0=tiff+g32(tiff+4);
+          const scan=(ifd)=>{ const n=g16(ifd); for(let i=0;i<n;i++){ const e=ifd+2+i*12; const tag=g16(e); if(tag===0x9003||tag===0x9004||tag===0x0132){ const count=g32(e+4); let vo=e+8; if(count>4) vo=tiff+g32(e+8); let s=""; for(let k=0;k<count-1;k++) s+=String.fromCharCode(view.getUint8(vo+k)); return s; } } return null; };
+          let exifPtr=null; const n0=g16(ifd0);
+          for(let i=0;i<n0;i++){ const e=ifd0+2+i*12; if(g16(e)===0x8769){ exifPtr=tiff+g32(e+8); break; } }
+          let ds = exifPtr!=null ? scan(exifPtr) : null;
+          if(!ds) ds=scan(ifd0);
+          if(ds){ const m=ds.match(/(\d{4}):(\d{2}):(\d{2})/); if(m) return new Date(+m[1], +m[2]-1, +m[3]); }
+        }
+        return null;
+      } else if((marker & 0xFF00)!==0xFF00){ break; }
+      else { offset += 2+size; }
+    }
+  }catch(e){}
+  return null;
+}
+async function photoDate(blob){
+  const exif=await readExifDate(blob);
+  if(exif && !isNaN(exif)) return exif;
+  if(blob.lastModified) return new Date(blob.lastModified);
+  return new Date();
+}
+function fmtDateFR(d){ const p=n=>String(n).padStart(2,"0"); return p(d.getDate())+"-"+p(d.getMonth()+1)+"-"+d.getFullYear(); }
+function safeName(s){ return ((s||"Sansnom").replace(/[\\/:\*\?"<>\|\s]+/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"")) || "Sansnom"; }
+function extFor(mime){ if(/jpe?g/i.test(mime||"")) return "jpg"; if(/png/i.test(mime||"")) return "png"; if(/webp/i.test(mime||"")) return "webp"; if(/gif/i.test(mime||"")) return "gif"; return "img"; }
+
+// Upload complet d'une photo : original (dossier de la fille) + vignette (sous-dossier 'vignettes')
+async function uploadPhotoFile(blob, prenom, num){
+  await driveEnsureFolder();
+  const girl=safeName(prenom);
+  const girlFolder=await driveEnsureSubfolder(driveFolderId, girl);
+  const vignFolder=await driveEnsureSubfolder(girlFolder, "vignettes");
+  const d=await photoDate(blob);
+  const baseName=`${girl}_${fmtDateFR(d)}_${num}`;
+  const origName=baseName+"."+extFor(blob.type);
+  const thumbBlob=await makeThumb(blob).catch(()=>blob);
+  const origId=await driveUploadBlobTo(blob, origName, girlFolder);
+  const thumbId=await driveUploadBlobTo(thumbBlob, baseName+".jpg", vignFolder);
+  return {origId, thumbId, mime:blob.type, name:origName};
+}
+
+function vidExt(mime){ if(/mp4/i.test(mime||""))return "mp4"; if(/quicktime|mov/i.test(mime||""))return "mov"; if(/webm/i.test(mime||""))return "webm"; if(/3gpp/i.test(mime||""))return "3gp"; return "mp4"; }
+// Upload fidèle d'une vidéo dans AsianKC/<Fille>/videos/
+async function uploadVideoFile(blob, prenom, num){
+  await driveEnsureFolder();
+  const girl=safeName(prenom);
+  const girlFolder=await driveEnsureSubfolder(driveFolderId, girl);
+  const vidFolder=await driveEnsureSubfolder(girlFolder, "videos");
+  const d=await photoDate(blob);
+  const name=`${girl}_${fmtDateFR(d)}_${num}.`+vidExt(blob.type);
+  const fileId=await driveUploadBlobTo(blob, name, vidFolder);
+  return {fileId, mime:blob.type, name};
+}
+
+// Récupère un objectURL pour un fichier Drive (cache mémoire -> cache local -> Drive)
+async function driveGetBlobURL(id){
+  if(!id) return null;
+  if(urlCache.has(id)) return urlCache.get(id);
+  let blob=await cacheGet(id);
+  if(!blob){
+    const r=await driveApi(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);
+    if(!r.ok) return null;
+    blob=await r.blob();
+    await cachePut(id, blob);
+  }
+  const u=URL.createObjectURL(blob); urlCache.set(id,u); return u;
+}
+
+// --- Helpers sur une "pic" (photo d'une fiche) ---
+// Types: {origId,thumbId,mime} (Drive) | {blob,_new} (nouvelle, à uploader) | {remoteUrl,_remote} (lien externe)
+async function picThumbURL(pic){
+  if(!pic) return null;
+  if(pic._remote) return pic.remoteUrl;
+  if(pic._new){ if(!pic._url) pic._url=URL.createObjectURL(pic.blob); return pic._url; }
+  return await driveGetBlobURL(pic.thumbId || pic.origId);
+}
+async function picOrigURL(pic){
+  if(!pic) return null;
+  if(pic._remote) return pic.remoteUrl;
+  if(pic._new){ if(!pic._url) pic._url=URL.createObjectURL(pic.blob); return pic._url; }
+  return await driveGetBlobURL(pic.origId || pic.thumbId);
+}
+
+// JSON sauvegardé sur Drive : uniquement les métadonnées + références photos (aucune image dedans)
+async function serializeAll(){
+  return fiches.map(f=>{
+    const o={...f};
+    delete o.photo; delete o.photos; delete o.backupPhotoUrl;
+    o.pics = (f.pics||[]).filter(p=>!p._new && !p._remote).map(p=>({origId:p.origId, thumbId:p.thumbId, mime:p.mime}))
+      .concat((f.pics||[]).filter(p=>p._remote).map(p=>({remoteUrl:p.remoteUrl, _remote:true})));
+    return o;
+  });
+}
+async function loadFromSerialized(arr){
+  await clearFiches();
+  for(const f of arr){
+    // Migration des anciennes fiches (photos stockées en base64 dans le JSON)
+    if(!Array.isArray(f.pics)){
+      const pics=[];
+      const legacy=[];
+      if(f.photo){ legacy.push(f.photo); }
+      if(Array.isArray(f.photos)){ f.photos.forEach(p=>legacy.push(p)); }
+      let mnum=0;
+      for(const item of legacy){
+        try{
+          if(typeof item==="string" && item.startsWith("data:")){
+            const blob=await dataURLToBlob(item);
+            mnum++;
+            const info=await uploadPhotoFile(blob, f.name||"Sansnom", mnum);
+            pics.push({origId:info.origId, thumbId:info.thumbId, mime:info.mime});
+          } else if(typeof item==="string" && /^https?:/.test(item)){
+            pics.push({remoteUrl:item, _remote:true});
+          }
+        }catch(e){ console.warn("migration photo échouée", e); }
+      }
+      f.pics=pics;
+    } else {
+      f.pics=f.pics.map(p=> p._remote ? {remoteUrl:p.remoteUrl,_remote:true} : {origId:p.origId, thumbId:p.thumbId, mime:p.mime});
+    }
+    delete f.photo; delete f.photos; delete f.backupPhotoUrl;
+    await put(f);
+  }
+  fiches=await getAll();
+}
+
+function initDriveClient(){
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: DRIVE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: async (resp)=>{
+      if(resp && resp.access_token){ driveToken=resp.access_token; await onSignedIn(); }
+      else { document.getElementById("authStatus").textContent="Sign-in cancelled. Try again."; }
+    },
+    error_callback: ()=>{ document.getElementById("authStatus").textContent="Sign-in failed. Try again."; }
+  });
+}
+function driveSignIn(){
+  if(typeof google==="undefined" || !google.accounts){ document.getElementById("authStatus").textContent="Google service still loading, try again in 2s."; return; }
+  if(!tokenClient) initDriveClient();
+  document.getElementById("authStatus").textContent="Opening Google sign-in…";
+  tokenClient.requestAccessToken();
+}
+
+async function driveApi(url, opts){
+  opts=opts||{}; opts.headers=Object.assign({Authorization:"Bearer "+driveToken}, opts.headers||{});
+  const r=await fetch(url, opts);
+  if(r.status===401){ throw new Error("token_expired"); }
+  return r;
+}
+async function driveFindFile(){
+  const q=encodeURIComponent(`name='${DRIVE_FILENAME}' and trashed=false`);
+  const r=await driveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name)`);
+  const j=await r.json();
+  return (j.files && j.files[0]) ? j.files[0].id : null;
+}
+async function driveDownload(id){
+  const r=await driveApi(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);
+  if(!r.ok) return null;
+  try{ return await r.json(); }catch(e){ return null; }
+}
+async function driveUpload(contentObj){
+  const body=JSON.stringify(contentObj);
+  if(driveFileId){
+    await driveApi(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`,
+      {method:"PATCH", headers:{"Content-Type":"application/json"}, body});
+  } else {
+    const boundary="akc"+Date.now();
+    const meta={name:DRIVE_FILENAME, mimeType:"application/json"};
+    const multipart=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${boundary}--`;
+    const r=await driveApi("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+      {method:"POST", headers:{"Content-Type":"multipart/related; boundary="+boundary}, body:multipart});
+    const j=await r.json(); driveFileId=j.id;
+  }
+}
+
+async function onSignedIn(){
+  const status=document.getElementById("authStatus");
+  try{
+    status.textContent="Preparing Drive folder…";
+    await driveEnsureFolder();
+    status.textContent="Loading your data…";
+    driveFileId=await driveFindFile();
+    let migrated=false;
+    if(driveFileId){
+      const data=await driveDownload(driveFileId);
+      if(Array.isArray(data)){
+        migrated = data.some(f=>!Array.isArray(f.pics) && (f.photo || (Array.isArray(f.photos)&&f.photos.length)));
+        await loadFromSerialized(data);
+      }
+    }
+    render();
+    document.getElementById("authGate").style.display="none";
+    // Si on a migré d'anciennes photos vers des fichiers Drive, on réécrit le JSON allégé
+    if(migrated) scheduleDriveSave();
+  }catch(e){
+    status.textContent = (e.message==="token_expired") ? "Session expired, sign in again." : "Loading error. Try again.";
+  }
+}
+
+function scheduleDriveSave(){
+  if(!driveToken) return;
+  clearTimeout(driveSaveTimer);
+  driveSaveTimer=setTimeout(async ()=>{
+    try{ const data=await serializeAll(); await driveUpload(data); }
+    catch(e){
+      if(e.message==="token_expired" && tokenClient){ tokenClient.requestAccessToken(); }
+      else console.error("Sauvegarde Drive échouée", e);
+    }
+  }, 900);
+}
+
+function driveLogout(){
+  try{ if(driveToken && google.accounts.oauth2.revoke) google.accounts.oauth2.revoke(driveToken, ()=>{}); }catch(e){}
+  driveToken=null; driveFileId=null;
+  clearFiches().then(()=>{ fiches=[]; render(); });
+  document.getElementById("authGate").style.display="flex";
+  document.getElementById("authStatus").textContent="Signed out. Sign in again to access your notebook.";
+}
+
+document.getElementById("googleSignInBtn").onclick = driveSignIn;
+document.getElementById("logoutBtn").onclick = ()=>{ if(confirm("Sign out? Local data on this device will be cleared (it stays in your Drive).")) driveLogout(); };
+
+(async()=>{
+  await openDB();
+  const theme = await getConfig("theme");
+  if(theme === "light") document.body.className = "light-mode";
+  // On n'affiche aucune donnée tant que l'utilisateur n'est pas connecté à son Drive.
+  fiches=[];
+  handleHashImport(); // import via bookmarklet (#tfimport=...) une fois connecté
+})();
+
+// Lit les données envoyées par le bookmarklet mobile dans l'URL, puis nettoie l'URL
+function handleHashImport(){
+  const h = location.hash || "";
+  const prefix = "#tfimport=";
+  if(h.indexOf(prefix) === 0){
+    try{
+      const d = JSON.parse(decodeURIComponent(h.slice(prefix.length)));
+      history.replaceState(null, "", location.pathname + location.search);
+      applyImportedData(d);
+    }catch(e){
+      history.replaceState(null, "", location.pathname + location.search);
+      alert("Import: unreadable data, try again.");
+    }
+  }
+}
+</script>
+<script>
+// Enregistrement du Service Worker (actif uniquement en HTTPS ou localhost)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
