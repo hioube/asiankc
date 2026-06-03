@@ -12,3 +12,6 @@ asiankc-data.json
 # Système
 Thumbs.db
 .DS_Store
+
+# Config locale Claude Code
+.claude/
