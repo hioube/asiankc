@@ -1851,7 +1851,8 @@ scanBtn.onclick = async () => {
       (f.pics||[]).forEach(p=>{ if(p.origId)referenced.add(p.origId); if(p.thumbId)referenced.add(p.thumbId); });
       (f.vids||[]).forEach(v=>{ if(v.fileId)referenced.add(v.fileId); });
     }
-    pendingOrphans = all.filter(f=>!referenced.has(f.id));
+    // Ne JAMAIS considérer le fichier de données comme orphelin (ni par son id, ni par son nom)
+    pendingOrphans = all.filter(f=> !referenced.has(f.id) && f.id!==driveFileId && f.name!==DRIVE_FILENAME);
     cleanupResult.style.display="block";
     if(!pendingOrphans.length){
       cleanupSummary.innerHTML = `✅ <b>No orphan files.</b> Your Drive is clean (${all.length} file${all.length>1?"s":""} all linked).`;
