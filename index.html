@@ -477,6 +477,7 @@
     </div>
 
     <div style="display:flex;gap:12px;">
+      <div style="flex:1;"><label>Birthday <span class="muted" style="font-size:11px;">(optional)</span></label><input type="date" id="f-birthday"></div>
       <div style="flex:1;"><label>Age</label><input type="text" id="f-age" placeholder="30"></div>
       <div style="flex:1;"><label>Gender</label>
         <select id="f-gender">
@@ -484,7 +485,7 @@
           <option value="LB">LB</option>
         </select>
       </div>
-      <div style="flex:2;"><label>City / location</label><input type="text" id="f-city" placeholder="Pattaya"></div>
+      <div style="flex:1;"><label>City / location</label><input type="text" id="f-city" placeholder="Pattaya"></div>
     </div>
 
     <div class="tech-grid">
@@ -725,6 +726,42 @@ function calculateBMI(weight, height) {
 
 function mainPic(f){ return (f.pics && f.pics[0]) ? f.pics[0] : null; }
 
+// ---- Calcul de l'âge ----
+// Nombre d'années complètes écoulées entre une date et aujourd'hui
+function fullYearsSince(d){
+  if(!d || isNaN(d)) return 0;
+  const now=new Date();
+  let y=now.getFullYear()-d.getFullYear();
+  const m=now.getMonth()-d.getMonth();
+  if(m<0 || (m===0 && now.getDate()<d.getDate())) y--;
+  return y;
+}
+// Âge exact à partir d'une date de naissance "YYYY-MM-DD"
+function ageFromBirthday(bd){
+  if(!bd) return null;
+  const b=new Date(bd);
+  if(isNaN(b)) return null;
+  const a=fullYearsSince(b);
+  return a>=0 ? a : null;
+}
+// Date de référence pour un âge saisi à la main (= date où l'âge était correct)
+function ageRefDate(f){
+  if(f.ageBaseDate){ const d=new Date(f.ageBaseDate); if(!isNaN(d)) return d; }
+  // Fiches sans date de référence : on déduit la date de création de l'id "f<timestamp>"
+  if(typeof f.id==="string" && /^f\d+$/.test(f.id)){ const t=Number(f.id.slice(1)); if(t>0) return new Date(t); }
+  if(f.date){ const d=new Date(f.date); if(!isNaN(d)) return d; }
+  return null;
+}
+// Âge affiché : priorité à la date de naissance, sinon âge manuel qui vieillit chaque année
+function computeAge(f){
+  const fromBd=ageFromBirthday(f.birthday);
+  if(fromBd!=null) return fromBd;
+  const base=parseFloat(f.age);
+  if(isNaN(base)) return null;
+  const ref=ageRefDate(f);
+  return Math.round(base) + (ref ? Math.max(0, fullYearsSince(ref)) : 0);
+}
+
 function calculateGlobalStats(filteredList) {
   if(!filteredList.length) {
     document.getElementById("stat-age").textContent = "-";
@@ -737,7 +774,7 @@ function calculateGlobalStats(filteredList) {
   let bjCount=0, analCount=0, threeCount=0, lbCount=0, bdsmCount=0, ftCount=0;
 
   filteredList.forEach(f => {
-    if(f.age) { totalAge += parseFloat(f.age); ageCount++; }
+    { const _a=computeAge(f); if(_a!=null){ totalAge += _a; ageCount++; } }
     if(f.weight) { totalWeight += parseFloat(f.weight); weightCount++; }
     if(f.grades && f.grades.globale) { totalScore += f.grades.globale; scoreCount++; }
     if(f.fellatio) bjCount++;
@@ -788,7 +825,8 @@ function render(){
     if(filterBdsm && !f.bdsm) return false;
     if(filterFt && !f.ft) return false;
     
-    if (f.age && (parseFloat(f.age) < minAge || parseFloat(f.age) > maxAge)) return false;
+    const _age=computeAge(f);
+    if (_age!=null && (_age < minAge || _age > maxAge)) return false;
     if (f.weight && (parseFloat(f.weight) < minWeight || parseFloat(f.weight) > maxWeight)) return false;
     if (f.height && (parseFloat(f.height) < minHeight || parseFloat(f.height) > maxHeight)) return false;
     const bmi = calculateBMI(f.weight, f.height);
@@ -799,7 +837,7 @@ function render(){
 
   const numOr = (v, def) => { const n=parseFloat(v); return isNaN(n)?def:n; };
   if(sortOrder === "scoreDesc")      list.sort((a,b)=> ((b.grades||{}).globale||0) - ((a.grades||{}).globale||0));
-  else if(sortOrder === "ageAsc")    list.sort((a,b)=> numOr(a.age,999) - numOr(b.age,999));
+  else if(sortOrder === "ageAsc")    { const ageOf=f=>{const a=computeAge(f);return a==null?999:a;}; list.sort((a,b)=> ageOf(a)-ageOf(b)); }
   else if(sortOrder === "nameAsc")   list.sort((a,b)=> (a.name||"").localeCompare(b.name||"", undefined, {sensitivity:"base"}));
   else if(sortOrder === "weightAsc") list.sort((a,b)=> numOr(a.weight,9999) - numOr(b.weight,9999));
   else if(sortOrder === "heightAsc") list.sort((a,b)=> numOr(a.height,9999) - numOr(b.height,9999));
@@ -951,6 +989,20 @@ function buildRatings(values){
   ratingsBox.appendChild(globalBox);
 }
 
+// Si une date de naissance est saisie : l'âge est calculé et le champ devient non modifiable
+function syncAgeFromBirthday(){
+  const bd=document.getElementById("f-birthday").value;
+  const ageEl=document.getElementById("f-age");
+  if(bd){
+    const a=ageFromBirthday(bd);
+    if(a!=null) ageEl.value=a;
+    ageEl.readOnly=true; ageEl.style.opacity="0.6"; ageEl.title="Calculé depuis la date de naissance";
+  } else {
+    ageEl.readOnly=false; ageEl.style.opacity="1"; ageEl.title="";
+  }
+}
+document.getElementById("f-birthday").addEventListener("change", syncAgeFromBirthday);
+
 function openEdit(f, isAutofill = false){
   if(document.body.classList.contains("read-only")) return; // mobile : lecture seule
   document.getElementById("editTitle").textContent=f?"Edit profile":"New profile";
@@ -959,6 +1011,8 @@ function openEdit(f, isAutofill = false){
   document.getElementById("f-status").value=f?(f.status||"active"):"active";
   document.getElementById("f-date").value=f?(f.date||""):new Date().toISOString().slice(0,10);
   document.getElementById("f-age").value=f?(f.age||""):"";
+  document.getElementById("f-birthday").value=f?(f.birthday||""):"";
+  syncAgeFromBirthday();
   document.getElementById("f-gender").value = (f && /lb|ladyboy|trans|ts/i.test(f.gender||"")) ? "LB" : "Female";
   document.getElementById("f-city").value=f?(f.city||""):"";
   document.getElementById("f-height-cm").value=f?(f.height||""):"";
@@ -997,6 +1051,17 @@ function closeEdit(){editOverlay.classList.remove("open");}
 
 async function saveEdit(){
   const id=document.getElementById("f-id").value||("f"+Date.now());
+  // Âge / date de naissance
+  const birthday=document.getElementById("f-birthday").value;
+  const enteredAge=document.getElementById("f-age").value.trim();
+  const prevFiche=fiches.find(x=>x.id===id);
+  const todayStr=new Date().toISOString().slice(0,10);
+  // Date de référence de l'âge manuel : (re)définie quand l'âge change, sinon conservée
+  let ageBaseDate = (prevFiche && prevFiche.ageBaseDate) ? prevFiche.ageBaseDate : "";
+  if(!birthday){
+    const prevAge = prevFiche ? (prevFiche.age||"") : "";
+    if(enteredAge && enteredAge !== prevAge) ageBaseDate = todayStr;
+  }
   const grades={}; ratingsBox.querySelectorAll("input[type=range]").forEach(r=>grades[r.dataset.key]=Number(r.value));
   let total = 0; CRITERIA.forEach(c => total += grades[c.key]); grades.globale = Number((total / CRITERIA.length).toFixed(1));
 
@@ -1042,7 +1107,7 @@ async function saveEdit(){
   const fiche={
     id, name:document.getElementById("f-name").value.trim(), date:document.getElementById("f-date").value,
     status: document.getElementById("f-status").value,
-    age:document.getElementById("f-age").value.trim(), gender:document.getElementById("f-gender").value.trim(),
+    age:enteredAge, birthday:birthday, ageBaseDate:ageBaseDate, gender:document.getElementById("f-gender").value.trim(),
     city:document.getElementById("f-city").value.trim(), height:document.getElementById("f-height-cm").value.trim(),
     weight:document.getElementById("f-weight-kg").value.trim(), education:document.getElementById("f-education").value.trim(),
     link:document.getElementById("f-link").value.trim(), contact:document.getElementById("f-contact").value.trim(),
@@ -1301,7 +1366,7 @@ function openView(id){
 
   // Infos contact & Bouton direct WhatsApp (géré intelligemment avec le profil)
   const parts=[];
-  if(f.age) parts.push("🎂 "+escapeHtml(f.age)+" yrs"); if(f.city) parts.push("📍 "+escapeHtml(f.city));
+  const liveAge=computeAge(f); if(liveAge!=null) parts.push("🎂 "+liveAge+" yrs"+(f.birthday?" 🎈":"")); if(f.city) parts.push("📍 "+escapeHtml(f.city));
   
   if(f.contact) {
     parts.push(`📞 <span style="font-weight:600; color:var(--accent); cursor:pointer;" id="v-wa-click" title="Send a WhatsApp message">${escapeHtml(f.contact)} 💬</span>`);
@@ -1597,6 +1662,23 @@ async function photoDate(blob){
 function fmtDateFR(d){ const p=n=>String(n).padStart(2,"0"); return p(d.getDate())+"-"+p(d.getMonth()+1)+"-"+d.getFullYear(); }
 function safeName(s){ return ((s||"Sansnom").replace(/[\\/:\*\?"<>\|\s]+/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"")) || "Sansnom"; }
 function extFor(mime){ if(/jpe?g/i.test(mime||"")) return "jpg"; if(/png/i.test(mime||"")) return "png"; if(/webp/i.test(mime||"")) return "webp"; if(/gif/i.test(mime||"")) return "gif"; return "img"; }
+// Détecte le vrai format d'après la signature (magic bytes) quand le type MIME est absent/inconnu
+async function sniffImageExt(blob){
+  try{
+    const b=new Uint8Array(await blob.slice(0,16).arrayBuffer());
+    if(b[0]===0xFF && b[1]===0xD8 && b[2]===0xFF) return "jpg";
+    if(b[0]===0x89 && b[1]===0x50 && b[2]===0x4E && b[3]===0x47) return "png";
+    if(b[0]===0x47 && b[1]===0x49 && b[2]===0x46) return "gif";
+    if(b[0]===0x52 && b[1]===0x49 && b[2]===0x46 && b[3]===0x46 && b[8]===0x57 && b[9]===0x45 && b[10]===0x42 && b[11]===0x50) return "webp";
+  }catch(e){}
+  return null;
+}
+// Choisit l'extension : type MIME si connu, sinon signature du fichier, sinon "img"
+async function bestExt(blob){
+  let ext=extFor(blob.type);
+  if(ext==="img"){ const sn=await sniffImageExt(blob); if(sn) ext=sn; }
+  return ext;
+}
 
 // Upload complet d'une photo : original (dossier de la fille) + vignette (sous-dossier 'vignettes')
 async function uploadPhotoFile(blob, prenom, num){
@@ -1606,7 +1688,7 @@ async function uploadPhotoFile(blob, prenom, num){
   const vignFolder=await driveEnsureSubfolder(girlFolder, "vignettes");
   const d=await photoDate(blob);
   const baseName=`${girl}_${fmtDateFR(d)}_${num}`;
-  const origName=baseName+"."+extFor(blob.type);
+  const origName=baseName+"."+(await bestExt(blob));
   const thumbBlob=await makeThumb(blob).catch(()=>blob);
   const origId=await driveUploadBlobTo(blob, origName, girlFolder);
   const thumbId=await driveUploadBlobTo(thumbBlob, baseName+".jpg", vignFolder);

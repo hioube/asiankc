@@ -1,5 +1,5 @@
 // Service Worker AsianKC — change la version pour forcer une mise à jour
-const CACHE = "asiankc-v15";
+const CACHE = "asiankc-v16";
 const SHELL = [
   "./",
   "./index.html",
