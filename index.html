@@ -167,6 +167,8 @@
   /* Grille dynamique gérée en JS via variable CSS */
   .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(var(--grid-size, 230px), 1fr));
     gap:16px; padding:22px 22px 40px;}
+  /* Sur mobile : marges et gouttières réduites pour permettre 3 colonnes en petite vignette */
+  body.is-mobile .grid{ gap:10px; padding:14px 10px 40px; }
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
     overflow:hidden;cursor:pointer;position:relative;
     transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
@@ -385,7 +387,7 @@
       </div>
       <div class="filter-range-item" style="margin-top:5px; border-top:1px dashed var(--line); padding-top:10px;">
         <span class="range-label" style="background:var(--accent); color:var(--bg);" id="label-gridSize">230px</span>
-        <input type="range" id="filter-gridSize" min="105" max="360" value="230">
+        <input type="range" id="filter-gridSize" min="90" max="360" value="230">
         <span class="range-label">Zoom</span>
       </div>
     </div>
@@ -801,9 +803,10 @@ function render(){
   const filterFt=filterState.tags.ft;
   const sortOrder = document.getElementById("sortSelect").value;
   const filterStatus = filterState.status;
-  const filterCity = document.getElementById("filterCity").value;
   populateCityFilter();
+  const filterCity = document.getElementById("filterCity").value; // lu après restauration éventuelle
   updateFilterCount();
+  persistPrefs();
   
   const minAge = Number(document.getElementById("filter-age-min").value);
   const maxAge = Number(document.getElementById("filter-age-max").value);
@@ -886,7 +889,10 @@ function populateCityFilter(){
   const current=sel.value;
   const cities=[...new Set(fiches.map(f=>(f.city||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   sel.innerHTML='<option value="">All cities</option>'+cities.map(c=>`<option value="${escapeHtml(c)}">📍 ${escapeHtml(c)}</option>`).join("");
-  if(cities.includes(current)) sel.value=current;
+  // Restaure la ville sauvegardée une fois que ses options existent
+  let want = current;
+  if(pendingCity && cities.length){ want = pendingCity; pendingCity = null; }
+  if(cities.includes(want)) sel.value = want;
 }
 
 document.getElementById("search").oninput=render;
@@ -929,7 +935,58 @@ const gridSlider = document.getElementById("filter-gridSize");
 gridSlider.oninput = () => {
   document.getElementById("label-gridSize").textContent = gridSlider.value + "px";
   document.documentElement.style.setProperty('--grid-size', gridSlider.value + 'px');
+  persistPrefs();
 };
+
+// ---- Persistance des préférences d'affichage (taille de vignette, tri, filtres) ----
+let pendingCity = null;     // ville à restaurer une fois les options chargées
+let prefsTimer = null;
+function gatherPrefs(){
+  return {
+    gridSize: gridSlider.value,
+    sort: document.getElementById("sortSelect").value,
+    status: filterState.status,
+    tags: {...filterState.tags},
+    city: document.getElementById("filterCity").value,
+    ranges: {
+      age:   [document.getElementById("filter-age-min").value,    document.getElementById("filter-age-max").value],
+      weight:[document.getElementById("filter-weight-min").value, document.getElementById("filter-weight-max").value],
+      height:[document.getElementById("filter-height-min").value, document.getElementById("filter-height-max").value],
+      bmi:   [document.getElementById("filter-bmi-min").value,    document.getElementById("filter-bmi-max").value],
+    }
+  };
+}
+function persistPrefs(){
+  clearTimeout(prefsTimer);
+  prefsTimer = setTimeout(()=>{ saveConfig("viewPrefs", gatherPrefs()); }, 400);
+}
+async function loadViewPrefs(){
+  const p = await getConfig("viewPrefs"); if(!p) return;
+  if(p.gridSize){
+    gridSlider.value = p.gridSize;
+    document.getElementById("label-gridSize").textContent = p.gridSize + "px";
+    document.documentElement.style.setProperty('--grid-size', p.gridSize + 'px');
+  }
+  if(p.sort) document.getElementById("sortSelect").value = p.sort;
+  if(p.status != null){
+    filterState.status = p.status;
+    document.querySelectorAll("#statusChips .chip").forEach(c=>c.classList.toggle("active", c.dataset.status===p.status));
+  }
+  if(p.tags){
+    Object.keys(filterState.tags).forEach(k=> filterState.tags[k] = !!p.tags[k]);
+    document.querySelectorAll("#tagChips .chip").forEach(c=>c.classList.toggle("active", !!p.tags[c.dataset.tag]));
+  }
+  if(p.city) pendingCity = p.city; // appliqué dans populateCityFilter quand les villes existent
+  if(p.ranges){
+    ["age","weight","height","bmi"].forEach(k=>{
+      if(p.ranges[k]){
+        document.getElementById(`filter-${k}-min`).value = p.ranges[k][0];
+        document.getElementById(`filter-${k}-max`).value = p.ranges[k][1];
+      }
+    });
+    updateAge(); updateWeight(); updateHeight(); updateBMI();
+  }
+}
 
 document.getElementById("clearFilters").onclick=()=>{
   document.getElementById("search").value = "";
@@ -1970,6 +2027,7 @@ cleanBtn.onclick = async () => {
   await openDB();
   const theme = await getConfig("theme");
   if(theme === "light") document.body.className = "light-mode";
+  await loadViewPrefs();
   // On n'affiche aucune donnée tant que l'utilisateur n'est pas connecté à son Drive.
   fiches=[];
   handleHashImport(); // import via bookmarklet (#tfimport=...) une fois connecté
