@@ -430,6 +430,19 @@
     </div>
 
     <div class="settings-section">
+      <h3>Drive cleanup</h3>
+      <p class="muted" style="font-size:13px; margin:4px 0 10px; line-height:1.5;">
+        Find media files in your <b>AsianKC</b> Drive folder that are no longer linked to any profile (orphans left after deletions).
+      </p>
+      <button class="btn-ghost" id="scanDriveBtn" style="width:100%;">🔍 Scan Drive for orphan files</button>
+      <div id="cleanupResult" style="display:none; margin-top:12px;">
+        <div id="cleanupSummary" style="font-size:13px; margin-bottom:8px;"></div>
+        <div id="cleanupList" style="max-height:160px; overflow:auto; font-size:12px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px; display:none;"></div>
+        <button class="btn-danger" id="cleanDriveBtn" style="width:100%; margin-top:10px; display:none;">🗑️ Move orphans to Drive trash</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
       <h3>Account & Sync</h3>
       <p class="muted" style="font-size:13px; margin:4px 0 10px; line-height:1.5;">
         Your profiles are synced with your personal Google Drive (file <b>asiankc-data.json</b>).
@@ -1780,6 +1793,95 @@ function driveLogout(){
 
 document.getElementById("googleSignInBtn").onclick = driveSignIn;
 document.getElementById("logoutBtn").onclick = ()=>{ if(confirm("Sign out? Local data on this device will be cleared (it stays in your Drive).")) driveLogout(); };
+
+// ============ NETTOYAGE DES FICHIERS ORPHELINS DU DRIVE ============
+let pendingOrphans = []; // résultat du dernier scan, en attente de nettoyage
+
+function fmtSize(bytes){
+  const b = Number(bytes) || 0;
+  if(b < 1024) return b + " B";
+  if(b < 1024*1024) return (b/1024).toFixed(1) + " KB";
+  if(b < 1024*1024*1024) return (b/1024/1024).toFixed(1) + " MB";
+  return (b/1024/1024/1024).toFixed(2) + " GB";
+}
+
+// Liste les enfants directs d'un dossier (avec pagination)
+async function driveListChildren(parentId){
+  let files=[], pageToken=null;
+  do{
+    const q=encodeURIComponent(`'${parentId}' in parents and trashed=false`);
+    let url=`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&pageSize=1000&fields=nextPageToken,files(id,name,mimeType,size)`;
+    if(pageToken) url+=`&pageToken=${pageToken}`;
+    const r=await driveApi(url); const j=await r.json();
+    files=files.concat(j.files||[]); pageToken=j.nextPageToken;
+  }while(pageToken);
+  return files;
+}
+// Collecte récursivement tous les FICHIERS (hors dossiers) sous un dossier
+async function driveCollectFiles(folderId){
+  const out=[]; const children=await driveListChildren(folderId);
+  for(const c of children){
+    if(c.mimeType==="application/vnd.google-apps.folder") out.push(...await driveCollectFiles(c.id));
+    else out.push(c);
+  }
+  return out;
+}
+// Déplace un fichier vers la corbeille Drive (réversible 30 jours)
+async function driveTrashFile(id){
+  await driveApi(`https://www.googleapis.com/drive/v3/files/${id}?fields=id`,
+    {method:"PATCH", headers:{"Content-Type":"application/json"}, body:JSON.stringify({trashed:true})});
+}
+
+const scanBtn=document.getElementById("scanDriveBtn");
+const cleanBtn=document.getElementById("cleanDriveBtn");
+const cleanupResult=document.getElementById("cleanupResult");
+const cleanupSummary=document.getElementById("cleanupSummary");
+const cleanupList=document.getElementById("cleanupList");
+
+scanBtn.onclick = async () => {
+  if(!driveToken){ alert("Sign in to your Drive first."); return; }
+  const lbl=scanBtn.textContent; scanBtn.disabled=true; scanBtn.textContent="Scanning…";
+  cleanupResult.style.display="none"; cleanBtn.style.display="none"; cleanupList.style.display="none";
+  try{
+    await driveEnsureFolder();
+    const all=await driveCollectFiles(driveFolderId);
+    // Tous les identifiants référencés par au moins une fiche
+    const referenced=new Set();
+    for(const f of fiches){
+      (f.pics||[]).forEach(p=>{ if(p.origId)referenced.add(p.origId); if(p.thumbId)referenced.add(p.thumbId); });
+      (f.vids||[]).forEach(v=>{ if(v.fileId)referenced.add(v.fileId); });
+    }
+    pendingOrphans = all.filter(f=>!referenced.has(f.id));
+    cleanupResult.style.display="block";
+    if(!pendingOrphans.length){
+      cleanupSummary.innerHTML = `✅ <b>No orphan files.</b> Your Drive is clean (${all.length} file${all.length>1?"s":""} all linked).`;
+    } else {
+      const totalSize=pendingOrphans.reduce((s,f)=>s+(Number(f.size)||0),0);
+      cleanupSummary.innerHTML = `Found <b>${pendingOrphans.length}</b> orphan file${pendingOrphans.length>1?"s":""} · <b>${fmtSize(totalSize)}</b> · out of ${all.length} total.`;
+      cleanupList.innerHTML = pendingOrphans.map(f=>`<div>• ${escapeHtml(f.name)} <span class="muted">(${fmtSize(f.size)})</span></div>`).join("");
+      cleanupList.style.display="block";
+      cleanBtn.style.display="block";
+    }
+  }catch(e){
+    cleanupResult.style.display="block";
+    cleanupSummary.innerHTML = (e.message==="token_expired") ? "⚠️ Session expired, sign in again." : "⚠️ Scan failed. Check your connection and try again.";
+  }finally{ scanBtn.disabled=false; scanBtn.textContent=lbl; }
+};
+
+cleanBtn.onclick = async () => {
+  if(!pendingOrphans.length) return;
+  if(!confirm(`Move ${pendingOrphans.length} orphan file(s) to your Google Drive trash?\n\nThey stay recoverable for 30 days.`)) return;
+  const lbl=cleanBtn.textContent; cleanBtn.disabled=true;
+  let done=0, failed=0;
+  for(const f of pendingOrphans){
+    cleanBtn.textContent=`Cleaning… ${done+1}/${pendingOrphans.length}`;
+    try{ await driveTrashFile(f.id); done++; }catch(e){ failed++; }
+  }
+  cleanBtn.disabled=false; cleanBtn.textContent=lbl;
+  cleanBtn.style.display="none"; cleanupList.style.display="none";
+  cleanupSummary.innerHTML = `✅ Moved <b>${done}</b> file${done>1?"s":""} to trash`+(failed?` · ⚠️ ${failed} failed`:"")+`.`;
+  pendingOrphans=[];
+};
 
 (async()=>{
   await openDB();
