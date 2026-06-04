@@ -633,7 +633,7 @@ let viewingId=null;
 
 const grid=document.getElementById("grid");
 const empty=document.getElementById("empty");
-const countEl=document.getElementById("count");
+const headCountEl=document.getElementById("headCount");
 
 // GESTION MODE SOMBRE / LUMINEUX
 const themeBtn = document.getElementById("themeBtn");
@@ -795,8 +795,12 @@ function render(){
   calculateGlobalStats(list);
 
   grid.innerHTML="";
-  if(countEl) countEl.textContent = list.length + " profile" + (list.length > 1 ? "s" : "") + (list.length !== fiches.length ? " found" : "");
-  document.getElementById("headCount").textContent = fiches.length;
+  // Badge en-tête : nombre affiché (et total entre parenthèses si un filtre est actif)
+  const total = fiches.length;
+  headCountEl.textContent = list.length;
+  headCountEl.title = (list.length !== total)
+    ? `${list.length} shown / ${total} total`
+    : `${total} profile${total > 1 ? "s" : ""}`;
   empty.style.display=list.length?"none":"block";
   
   for(const f of list){
@@ -821,6 +825,8 @@ function render(){
 }
 
 function escapeHtml(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+// N'autorise que les liens http(s) ; bloque javascript:, data:, etc. (liens importés depuis un site tiers)
+function safeUrl(u){ u=(u||"").trim(); return /^https?:\/\//i.test(u) ? u : ""; }
 function formatDate(d){if(!d)return ""; const[y,m,j]=d.split("-");return `${j}/${m}/${y}`;}
 
 // Remplit la liste déroulante des villes à partir des fiches (en gardant la sélection)
@@ -1292,7 +1298,8 @@ function openView(id){
   let tfLabel = "profile";
   if(st === "mia") tfLabel = "profile (⚠️ MIA)";
   if(st === "deleted") tfLabel = "profile (❌ Deleted)";
-  if(f.link) parts.push(`🔗 <a href="${escapeHtml(f.link)}" target="_blank" style="color:${st==='active'?'var(--accent)':'var(--danger)'}; font-weight:bold;">${tfLabel}</a>`);
+  const safeLink = safeUrl(f.link);
+  if(safeLink) parts.push(`🔗 <a href="${escapeHtml(safeLink)}" target="_blank" rel="noopener noreferrer" style="color:${st==='active'?'var(--accent)':'var(--danger)'}; font-weight:bold;">${tfLabel}</a>`);
   
   document.getElementById("v-info").innerHTML=parts.join(" &nbsp;·&nbsp; ");
   
